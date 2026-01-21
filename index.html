@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v26 | Configuração Manual</title>
+    <title>SmartMesocycle v26 | Cloud System</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -287,18 +287,12 @@
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // =================================================================================
-        // ÁREA DE CONFIGURAÇÃO DO FIREBASE (MANUAL)
+        // CONFIGURAÇÃO DO FIREBASE (PREENCHIDA PELO SISTEMA)
         // =================================================================================
         
-        // 1. Apague todo o conteúdo de "const firebaseConfig = { ... };" abaixo se houver.
-        // 2. Cole a configuração que você copiou do Console do Firebase.
-        // 3. ATENÇÃO: Se o código que você colar começar com "const firebaseConfig =", 
-        //    certifique-se de não duplicar essa linha. O objetivo é ter uma única constante
-        //    chamada 'firebaseConfig' com seus dados.
-
-        // COLE SUA CONFIGURAÇÃO DO FIREBASE AQUI:
+        // Aqui estão as suas chaves corretas, já inseridas para evitar erros de cópia.
         const firebaseConfig = {
-            apiKey: ""AIzaSyBpM3fImWbN0Zjes8NNfD3Tq95mebt1e40"
+            apiKey: "AIzaSyBpM3fImWbN0Zjes8NNfD3Tq95mebt1e40",
             authDomain: "smartmesocycle.firebaseapp.com",
             projectId: "smartmesocycle",
             storageBucket: "smartmesocycle.firebasestorage.app",
@@ -341,7 +335,7 @@
                     return true;
                 } catch (e) {
                     console.error("Erro Firebase:", e);
-                    // Não mostra alerta intrusivo se for apenas erro de rede inicial, mas loga no console
+                    // Erro silencioso no console para não assustar no início se for só internet
                     return false;
                 }
             },
@@ -924,7 +918,7 @@
             }
         };
 
-        // EXPOSTO GLOBALMENTE PARA OS BOTÕES HTML FUNCIONAREM (CRUCIAL!)
+        // EXPOSTO GLOBALMENTE PARA BOTÕES HTML FUNCIONAREM (CRUCIAL!)
         window.App = App;
         window.MockDB = MockDB;
 
