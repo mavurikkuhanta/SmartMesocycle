@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v26 | Cloud System</title>
+    <title>SmartMesocycle v26.1 | Cloud Debug</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -132,7 +132,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v26 Cloud</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v26.1 Debug</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -335,7 +335,8 @@
                     return true;
                 } catch (e) {
                     console.error("Erro Firebase:", e);
-                    // Erro silencioso no console para não assustar no início se for só internet
+                    // ALERTA DE ERRO REAL - MOSTRA O CÓDIGO DO ERRO NA TELA
+                    alert("Erro ao conectar no banco de dados (Firebase):\n\n" + e.message + "\n\nVerifique se o banco de dados foi CRIADO no console e se as Regras de Segurança estão em modo de teste.");
                     return false;
                 }
             },
@@ -894,20 +895,6 @@
                     if (currentSplit === 'Fullbody') options = ['A']; else if (currentSplit === 'Fullbody AB') options = ['A', 'B']; else if (currentSplit === 'ABC') options = ['A', 'B', 'C']; else if (currentSplit === 'ABCD') options = ['A', 'B', 'C', 'D']; else if (currentSplit === 'ABCDE') options = ['A', 'B', 'C', 'D', 'E'];
                     container.innerHTML = `<div class="max-w-md mx-auto mt-6 pb-20 px-4"><div class="flex justify-between items-center mb-6"><button onclick="App.Actions.goBackToLogin()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><i class="fa-solid fa-user-gear"></i> Trocar Aluno</button></div><div class="text-center mb-6"><h2 class="text-2xl font-bold text-white">Olá, ${activeStudent.name.split(' ')[0]}!</h2><p class="text-slate-400 text-sm">Pronto para o treino?</p></div><div class="glass-panel p-4 rounded-xl mb-6"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-slate-400 uppercase">Frequência Mensal</span><span class="text-xs text-green-400 font-bold">${history.length} Treinos</span></div><div class="calendar-grid">${calendarHTML}</div></div><div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-blue-500"><label class="text-sm font-bold text-blue-400 uppercase mb-2 block">Qual treino hoje?</label><select id="workout-day-select" class="input-sci text-lg py-3 bg-slate-900 border-slate-700">${options.map(o => `<option value="${o}">Treino ${o}</option>`).join('')}</select></div><div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Prontidão (PSR)</label><span class="text-2xl font-bold text-white" id="psr-display">8</span></div><input type="range" min="0" max="10" value="8" class="w-full h-3 rounded-lg cursor-pointer slider-psr" oninput="document.getElementById('psr-display').innerText=this.value"></div><div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Dor (EVA)</label><span class="text-2xl font-bold text-white" id="eva-display">2</span></div><input type="range" min="0" max="10" value="2" class="w-full h-3 rounded-lg cursor-pointer slider-eva" oninput="document.getElementById('eva-display').innerText=this.value"></div><div class="glass-panel p-6 rounded-xl mb-8"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Localizar Dor</label><div class="bg-slate-800 rounded p-1 flex"><button id="btn-front" class="px-3 py-1 bg-slate-700 text-white rounded text-xs" onclick="App.switchBodyView('front')">Frente</button><button id="btn-back" class="px-3 py-1 text-slate-500 hover:text-white rounded text-xs" onclick="App.switchBodyView('back')">Costas</button></div></div><div class="flex justify-center mb-4" id="body-map-container">${App.Views.components.getBodySVG('front')}</div><div class="border-t border-slate-700 pt-3"><p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Regiões Selecionadas:</p><div id="selected-pain-list" class="flex flex-wrap min-h-[24px]"><span class="text-slate-500 italic text-xs">Nenhuma área selecionada</span></div></div></div><button onclick="App.startWorkout()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg text-lg">Iniciar Treino</button></div>`;
                 },
-                renderStudentWorkout: (container) => {
-                    const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
-                    if (!activeStudent) return App.navigate('student_login');
-                    const day = App.state.workoutDayToExecute;
-                    const exercises = MockDB.getPrescription(activeStudent.id).filter(ex => (ex.day || 'A') === day);
-                    // RIR REMOVIDO, TIMER MOVIDO PARA FLUTUANTE
-                    container.innerHTML = `<div class="pb-24 max-w-lg mx-auto px-4"><div class="sticky top-0 bg-slate-900/95 backdrop-blur z-20 py-4 border-b border-slate-800 flex justify-between items-center mb-6"><button onclick="App.Actions.goBackToCheckin()" class="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-lg"><i class="fa-solid fa-arrow-left"></i></button><div class="text-center"><h2 class="text-lg font-bold text-white">Treino ${day}</h2><p class="text-xs text-slate-400">${activeStudent.name}</p></div><button onclick="App.Actions.startTimer(60)" class="text-white font-bold bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2"><i class="fa-solid fa-stopwatch text-blue-400"></i> Timer</button></div>${exercises.length > 0 ? exercises.map((ex, idx) => `<div class="glass-panel p-5 rounded-xl border-l-4 border-l-blue-500 mb-4 animate-fade-in" style="animation-delay: ${idx * 50}ms"><div class="flex justify-between items-start mb-3"><h3 class="font-bold text-lg text-white">${ex.name}</h3><span class="text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-600">${ex.cadence || 'N/A'}</span></div><div class="grid grid-cols-4 gap-2 text-center text-xs font-bold text-slate-500 uppercase mb-2"><div>Set</div><div>Kg</div><div>Reps</div><div>Feito</div></div><div class="space-y-2"><div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded"><div class="text-white font-bold">1</div><div class="text-white">${ex.weeks[0].w}</div><div class="text-white">${ex.weeks[0].r}</div><div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div></div>${ex.weeks[0].s > 1 ? Array(ex.weeks[0].s - 1).fill(0).map((_, i) => `<div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded"><div class="text-white font-bold">${i + 2}</div><div class="text-slate-400 text-xs">Repetir</div><div class="text-slate-400 text-xs">Repetir</div><div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div></div>`).join('') : ''}</div></div>`).join('') : `<div class="p-8 text-center text-slate-500 bg-slate-800 rounded-xl">Nenhum exercício cadastrado para o Treino ${day}.</div>`}<div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700"><h4 class="text-sm font-bold text-white mb-4">Feedback da Sessão</h4><div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-400">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div><input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value"><label class="text-sm font-bold text-white mb-2 block">Notas / Observações</label><textarea id="workout-notes" class="input-sci w-full h-24 resize-none" placeholder="Ex: Senti o ombro na elevação lateral..."></textarea></div><button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8">Finalizar Treino</button></div>`;
-                    let s=0; const t=document.getElementById('workout-timer'); if(t){ App.state.timerInterval=setInterval(()=>{ s++; t.innerText=`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; },1000); }
-                },
-                renderStudentSummary: (container) => {
-                    const data = App.tempSummary;
-                    if (!data) { App.navigate('landing'); return; }
-                    container.innerHTML = `<div class="max-w-md mx-auto mt-10 text-center px-4"><h2 class="text-2xl font-bold text-white mb-2">Treino Finalizado!</h2><p class="text-slate-400 text-sm mb-6">Sua frequência foi registrada.</p><div class="glass-panel p-6 rounded-xl mb-6 text-left"><div class="grid grid-cols-2 gap-4"><div><p class="text-[10px] text-slate-400 uppercase">Duração</p><p class="text-xl font-bold text-white">${data.duration} min</p></div><div><p class="text-[10px] text-slate-400 uppercase">PSE</p><p class="text-xl font-bold text-white">${data.pse}</p></div><div class="col-span-2 mt-2 pt-2 border-t border-slate-700/50"><p class="text-[10px] text-blue-400 uppercase font-bold">Carga (UA)</p><p class="text-4xl font-bold text-white">${data.internalLoad}</p></div></div></div><button onclick="App.Actions.logout()" class="btn-action bg-slate-800 w-full py-3">Sair</button></div>`;
-                },
                 components: {
                     getBodySVG: (view) => {
                         const f = "onclick=\"App.Actions.togglePainPoint(this.id, '"; const boxW = 70; const boxH = 18; const tY = 12; const labelGroup = (id, x, y, label, lineX, lineY) => { const side = x < 150 ? 'left' : 'right'; return `<g id="${id}" class="pain-group" ${f}${label}')"><line x1="${side === 'left' ? x + boxW : x}" y1="${y + boxH/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" /><rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" class="diagram-label-box" /><text x="${x + boxW/2}" y="${y + tY}" class="diagram-label-text">${label}</text></g>`; };
@@ -918,11 +905,6 @@
             }
         };
 
-        // EXPOSTO GLOBALMENTE PARA BOTÕES HTML FUNCIONAREM (CRUCIAL!)
-        window.App = App;
-        window.MockDB = MockDB;
-
-        // INICIALIZA O APP
         document.addEventListener('DOMContentLoaded', () => { App.init(); });
     </script>
 </body>
