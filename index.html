@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v27.23 | Saldo de Treinos</title>
+    <title>SmartMesocycle v27.25 | Código Completo</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -130,6 +130,15 @@
         .message-render th { background-color: rgba(255,255,255,0.1); }
         .message-render ul { list-style-type: disc; margin-left: 1.5rem; }
         .message-render ol { list-style-type: decimal; margin-left: 1.5rem; }
+        
+        /* Tamanhos de Fonte Customizados na Renderização */
+        .message-render font[size="1"] { font-size: 0.6rem; }
+        .message-render font[size="2"] { font-size: 0.8rem; }
+        .message-render font[size="3"] { font-size: 1rem; }
+        .message-render font[size="4"] { font-size: 1.25rem; }
+        .message-render font[size="5"] { font-size: 1.5rem; }
+        .message-render font[size="6"] { font-size: 2rem; }
+        .message-render font[size="7"] { font-size: 3rem; }
 
         /* Calendário */
         .calendar-grid { 
@@ -216,7 +225,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.23</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.25</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -540,12 +549,17 @@
             updateExercise: (id, exData) => {
                 const idx = MockDB.data.prescription.findIndex(e => e.id == id);
                 if (idx !== -1) {
+                    // Mescla os dados mantendo a integridade
                     const original = MockDB.data.prescription[idx];
-                    MockDB.data.prescription[idx] = { ...original, ...exData }; 
-                    if(!exData.weeks && !original.weeks) {
-                         MockDB.data.prescription[idx].weeks = [{ s: exData.sets, r: exData.reps, w: exData.load }, { s: '', r: '', w: '' }, { s: '', r: '', w: '' }, { s: '', r: '', w: '' }];
-                    }
-                    const { fireId, ...clean } = MockDB.data.prescription[idx];
+                    let updated = { ...original, ...exData };
+                    
+                    // Garante estrutura antes de salvar
+                    updated = MockDB._ensureWeeksStructure(updated);
+                    
+                    MockDB.data.prescription[idx] = updated;
+                    
+                    // Prepara para o Firebase (remove fireId para o update)
+                    const { fireId, ...clean } = updated;
                     MockDB._syncUpdate('prescription', id, clean);
                 }
             },
@@ -889,8 +903,31 @@
                 
                 // --- EDITOR RICO: FUNÇÕES ---
                 formatText: (command, value = null) => {
-                    document.execCommand(command, false, value);
-                    // Opcional: Focar de volta no editor se necessário, mas execCommand funciona na seleção atual
+                    // Mapeamento para garantir tamanhos de 1 a 7 com fontSize
+                    if (command === 'decreaseFontSize' || command === 'increaseFontSize') {
+                        // Obtém o tamanho atual ou assume 3 (padrão)
+                        let currentSize = document.queryCommandValue('fontSize');
+                        // Se não for numérico (ex: "medium"), converte
+                        if (!currentSize) currentSize = 3; 
+                        
+                        // Garante que é número
+                        let newSize = parseInt(currentSize);
+                        
+                        if (command === 'decreaseFontSize') {
+                            newSize = Math.max(1, newSize - 1);
+                        } else {
+                            newSize = Math.min(7, newSize + 1);
+                        }
+                        
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('fontSize', false, newSize);
+                    } else {
+                        document.execCommand(command, false, value);
+                    }
+                    
+                    // Mantém o foco no editor
+                    const editor = document.getElementById('rich-text-editor');
+                    if (editor) editor.focus();
                 },
 
                 insertTable: () => {
@@ -1084,7 +1121,7 @@
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
                             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Smart<span class="text-blue-500">Mesocycle</span></h1>
-                            <p class="text-slate-400 mb-12">Clean & Backup v27.23</p>
+                            <p class="text-slate-400 mb-12">Clean & Backup v27.25</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
                                 <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
                                     <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg"><i class="fa-solid fa-user-tie text-3xl text-blue-400"></i></div>
@@ -1205,7 +1242,6 @@
                     const exercises = fullPrescription.filter(ex => (ex.day || 'A') === App.state.currentDay);
                     const tabsHTML = tabs.map(t => `<div onclick="App.Actions.switchDay('${t}')" class="workout-tab ${App.state.currentDay === t ? 'active' : ''}">Treino ${t}</div>`).join('');
                     
-                    // --- ATUALIZADO: Botão Salvar, Layout da Tabela e NOVO EDITOR RICO ---
                     container.innerHTML = `
                     <div class="glass-panel p-4 mb-4 rounded-xl border border-slate-700">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
@@ -1297,6 +1333,7 @@
                         const isToday = i === today.getDate();
                         calendarHTML += `<div class="calendar-day ${hasWorkout ? 'active' : ''} ${isToday ? 'today' : ''}">${i}</div>`;
                     }
+                    const options = (activeStudent.split || 'Fullbody').includes('Fullbody') ? ['A','B'] : ['A','B','C','D','E'];
                     
                     // --- NOVO: SALDO DE TREINOS ---
                     // Calcula a contagem de cada treino realizado
@@ -1328,8 +1365,6 @@
                         </div>
                     `;
 
-                    const options = studentSplit;
-                    
                     const messageHTML = activeStudent.message ? `
                         <div class="glass-panel p-4 rounded-xl mb-6 border-l-4 border-l-purple-500 animate-fade-in bg-slate-800/80">
                             <h3 class="text-xs font-bold text-purple-400 uppercase mb-2 flex items-center"><i class="fa-solid fa-message mr-2"></i> Recado do Treinador</h3>
@@ -1345,7 +1380,7 @@
                             <div class="glass-panel p-4 rounded-xl mb-6">
                                 <div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-slate-400 uppercase">Frequência Mensal</span><span class="text-xs text-green-400 font-bold">${history.length} Treinos</span></div>
                                 <div class="calendar-grid">${calendarHTML}</div>
-                                ${balanceHTML} <!-- Inserção do Saldo aqui -->
+                                ${balanceHTML}
                             </div>
                             
                             <div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-blue-500"><label class="text-sm font-bold text-blue-400 uppercase mb-2 block">Qual treino hoje?</label><select id="workout-day-select" class="input-sci text-lg py-3 bg-slate-900 border-slate-700">${options.map(o => `<option value="${o}">Treino ${o}</option>`).join('')}</select></div>
@@ -1372,9 +1407,71 @@
                     const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
                     if (!activeStudent) return App.navigate('student_login');
                     const day = App.state.workoutDayToExecute;
+                    
+                    // Cálculo da Semana Atual (Periodização)
+                    // Conta quantos treinos desse TIPO (ex: 'A') o aluno já fez
+                    const history = MockDB.getHistory(activeStudent.id);
+                    const completedSessions = history.filter(h => h.day === day).length;
+                    // Ciclo de 4 semanas (0, 1, 2, 3)
+                    const currentWeekIndex = completedSessions % 4;
+                    const weekNames = ['Base', 'Acúmulo', 'Choque', 'Deload'];
+                    const currentWeekName = weekNames[currentWeekIndex];
+
                     const exercises = MockDB.getPrescription(activeStudent.id).filter(ex => (ex.day || 'A') === day);
-                    // RIR REMOVIDO, TIMER MOVIDO PARA FLUTUANTE
-                    container.innerHTML = `<div class="pb-24 max-w-lg mx-auto px-4"><div class="sticky top-0 bg-slate-900/95 backdrop-blur z-20 py-4 border-b border-slate-800 flex justify-between items-center mb-6"><button onclick="App.Actions.goBackToCheckin()" class="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-lg"><i class="fa-solid fa-arrow-left"></i></button><div class="text-center"><h2 class="text-lg font-bold text-white">Treino ${day}</h2><p class="text-xs text-slate-400">${activeStudent.name}</p></div><button onclick="App.Actions.startTimer(60)" class="text-white font-bold bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2"><i class="fa-solid fa-stopwatch text-blue-400"></i> Timer</button></div>${exercises.length > 0 ? exercises.map((ex, idx) => `<div class="glass-panel p-5 rounded-xl border-l-4 border-l-blue-500 mb-4 animate-fade-in" style="animation-delay: ${idx * 50}ms"><div class="flex justify-between items-start mb-3"><h3 class="font-bold text-lg text-white">${ex.name}</h3><span class="text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-600">${ex.cadence || 'N/A'}</span></div><div class="text-sm text-slate-400 italic mb-4">${ex.notes || ''}</div><div class="grid grid-cols-4 gap-2 text-center text-xs font-bold text-slate-500 uppercase mb-2"><div>Set</div><div>Kg</div><div>Reps</div><div>Feito</div></div><div class="space-y-2"><div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded"><div class="text-white font-bold">1</div><div class="text-white">${ex.weeks[0].w}</div><div class="text-white">${ex.weeks[0].r}</div><div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div></div>${ex.weeks[0].s > 1 ? Array(ex.weeks[0].s - 1).fill(0).map((_, i) => `<div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded"><div class="text-white font-bold">${i + 2}</div><div class="text-slate-400 text-xs">Repetir</div><div class="text-slate-400 text-xs">Repetir</div><div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div></div>`).join('') : ''}</div></div>`).join('') : `<div class="p-8 text-center text-slate-500 bg-slate-800 rounded-xl">Nenhum exercício cadastrado para o Treino ${day}.</div>`}<div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700"><h4 class="text-sm font-bold text-white mb-4">Feedback da Sessão</h4><div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-400">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div><input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value"><label class="text-sm font-bold text-white mb-2 block">Notas / Observações</label><textarea id="workout-notes" class="input-sci w-full h-24 resize-none" placeholder="Ex: Senti o ombro na elevação lateral..."></textarea></div><button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8">Finalizar Treino</button></div>`;
+                    
+                    container.innerHTML = `
+                    <div class="pb-24 max-w-lg mx-auto px-4">
+                        <div class="sticky top-0 bg-slate-900/95 backdrop-blur z-20 py-4 border-b border-slate-800 flex justify-between items-center mb-6">
+                            <button onclick="App.Actions.goBackToCheckin()" class="text-slate-400 hover:text-white p-2 bg-slate-800 rounded-lg"><i class="fa-solid fa-arrow-left"></i></button>
+                            <div class="text-center">
+                                <h2 class="text-lg font-bold text-white">Treino ${day} <span class="text-blue-400 text-xs uppercase ml-1 border border-blue-500/30 px-1.5 py-0.5 rounded">Semana ${currentWeekIndex + 1} - ${currentWeekName}</span></h2>
+                                <p class="text-xs text-slate-400">${activeStudent.name}</p>
+                            </div>
+                            <button onclick="App.Actions.startTimer(60)" class="text-white font-bold bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2"><i class="fa-solid fa-stopwatch text-blue-400"></i> Timer</button>
+                        </div>
+                        
+                        ${exercises.length > 0 ? exercises.map((ex, idx) => {
+                            // Pega os dados da semana correta ou fallback para semana 1 se der erro
+                            const weekData = ex.weeks[currentWeekIndex] || ex.weeks[0];
+                            const sets = parseInt(weekData.s) || 1; // Garante pelo menos 1 set para renderizar
+                            
+                            return `
+                            <div class="glass-panel p-5 rounded-xl border-l-4 border-l-blue-500 mb-4 animate-fade-in" style="animation-delay: ${idx * 50}ms">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="font-bold text-lg text-white">${ex.name}</h3>
+                                    <span class="text-xs font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-600">${ex.cadence || 'N/A'}</span>
+                                </div>
+                                ${ex.notes ? `<div class="text-sm text-slate-400 italic mb-4 bg-slate-800/50 p-2 rounded border border-slate-700/50"><i class="fa-solid fa-info-circle mr-1"></i> ${ex.notes}</div>` : ''}
+                                <div class="grid grid-cols-4 gap-2 text-center text-xs font-bold text-slate-500 uppercase mb-2">
+                                    <div>Set</div>
+                                    <div>Kg (S${currentWeekIndex + 1})</div>
+                                    <div>Reps</div>
+                                    <div>Feito</div>
+                                </div>
+                                <div class="space-y-2">
+                                    <!-- Renderiza as séries baseadas no número definido na semana -->
+                                    ${Array.from({length: sets}).map((_, i) => `
+                                    <div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded">
+                                        <div class="text-white font-bold">${i + 1}</div>
+                                        <div class="text-white font-mono text-blue-300">${weekData.w || '-'}</div>
+                                        <div class="text-white font-mono">${weekData.r || '-'}</div>
+                                        <div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div>
+                                    </div>`).join('')}
+                                </div>
+                            </div>`
+                        }).join('') : `<div class="p-8 text-center text-slate-500 bg-slate-800 rounded-xl">Nenhum exercício cadastrado para o Treino ${day}.</div>`}
+                        
+                        <div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700">
+                            <h4 class="text-sm font-bold text-white mb-4">Feedback da Sessão</h4>
+                            <div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-400">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div>
+                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value">
+                            <label class="text-sm font-bold text-white mb-2 block">Notas / Observações</label>
+                            <textarea id="workout-notes" class="input-sci w-full h-24 resize-none" placeholder="Ex: Senti o ombro na elevação lateral..."></textarea>
+                        </div>
+                        
+                        <button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8">Finalizar Treino</button>
+                    </div>`;
+                    
                     let s=0; const t=document.getElementById('workout-timer'); if(t){ App.state.timerInterval=setInterval(()=>{ s++; t.innerText=`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; },1000); }
                 },
                 renderStudentSummary: (container) => {
