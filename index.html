@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v27.16 | Salvamento Total</title>
+    <title>SmartMesocycle v27.17 | Correção Semanas 2-4</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -189,7 +188,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.16</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.17</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -472,14 +471,12 @@
                 return MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
             },
             
-            // --- CORREÇÃO AQUI ---
-            // A função addExerciseToPrescription agora verifica se "weeks" já existe
-            // para evitar valores undefined vindos do botão rápido
+            // --- CORREÇÃO CRÍTICA NAS SEMANAS (S1-S4) ---
             addExerciseToPrescription: (exData) => { 
                 const newEx = { 
                     ...exData, 
-                    // REMOVIDO: notes: exData.notes || '', (Não precisa mais no objeto se não for usado na view, mas mal não faz)
-                    weeks: exData.weeks || [
+                    // Garante que o array weeks tenha 4 objetos SEMPRE
+                    weeks: exData.weeks && exData.weeks.length >= 4 ? exData.weeks : [
                         { s: exData.sets || '', r: exData.reps || '', w: exData.load || '' }, 
                         { s: '', r: '', w: '' }, 
                         { s: '', r: '', w: '' }, 
@@ -493,12 +490,24 @@
             updateExercise: (id, exData) => {
                 const idx = MockDB.data.prescription.findIndex(e => e.id == id);
                 if (idx !== -1) {
+                    // Mescla os dados com cuidado para não perder as semanas
                     const original = MockDB.data.prescription[idx];
-                    MockDB.data.prescription[idx] = { ...original, ...exData }; 
-                    if(!exData.weeks && !original.weeks) {
-                         MockDB.data.prescription[idx].weeks = [{ s: exData.sets, r: exData.reps, w: exData.load }, { s: '', r: '', w: '' }, { s: '', r: '', w: '' }, { s: '', r: '', w: '' }];
+                    const updated = { ...original, ...exData };
+                    
+                    // Garante que a estrutura de semanas esteja intacta
+                    if (!updated.weeks || updated.weeks.length < 4) {
+                         updated.weeks = [
+                             updated.weeks && updated.weeks[0] ? updated.weeks[0] : { s: '', r: '', w: '' },
+                             updated.weeks && updated.weeks[1] ? updated.weeks[1] : { s: '', r: '', w: '' },
+                             updated.weeks && updated.weeks[2] ? updated.weeks[2] : { s: '', r: '', w: '' },
+                             updated.weeks && updated.weeks[3] ? updated.weeks[3] : { s: '', r: '', w: '' }
+                         ];
                     }
-                    const { fireId, ...clean } = MockDB.data.prescription[idx];
+                    
+                    MockDB.data.prescription[idx] = updated;
+                    
+                    // Prepara para o Firebase (remove fireId para o update)
+                    const { fireId, ...clean } = updated;
                     MockDB._syncUpdate('prescription', id, clean);
                 }
             },
@@ -744,16 +753,16 @@
                     if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
                     document.getElementById('float-timer').classList.add('hidden');
                 },
+                
+                // --- CORREÇÃO AQUI ---
+                // Agora o updatePrescriptionInput é capaz de lidar com a criação de semanas se elas não existirem
                 updatePrescriptionInput: (inputEl, exerciseId, weekIndex, field) => {
                     inputEl.classList.add('saved-pulse'); setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
                     const ex = MockDB.getExerciseById(exerciseId);
                     if(ex) { 
-                        // CORREÇÃO CRÍTICA AQUI:
-                        // Garantir que a semana existe antes de tentar acessar
-                        if (!ex.weeks[weekIndex]) {
-                            // Se a semana não existe, preencher com objeto vazio
-                            ex.weeks[weekIndex] = { s: '', r: '', w: '' };
-                        }
+                        // Verifica e cria a semana se não existir
+                        if (!ex.weeks) ex.weeks = [];
+                        if (!ex.weeks[weekIndex]) ex.weeks[weekIndex] = { s: '', r: '', w: '' };
                         
                         ex.weeks[weekIndex][field] = inputEl.value; 
                         MockDB.updateExercise(exerciseId, ex); 
@@ -1040,7 +1049,7 @@
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
                             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Smart<span class="text-blue-500">Mesocycle</span></h1>
-                            <p class="text-slate-400 mb-12">Clean & Backup v27.16</p>
+                            <p class="text-slate-400 mb-12">Clean & Backup v27.17</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
                                 <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
                                     <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg"><i class="fa-solid fa-user-tie text-3xl text-blue-400"></i></div>
@@ -1324,28 +1333,7 @@
                     },
 
                     getBodySVG: (view) => {
-                        // Função auxiliar para gerar o label COM CHECKBOX
-                        const labelGroup = (id, x, y, label, lineX, lineY) => { 
-                            const side = x < 150 ? 'left' : 'right';
-                            const checkboxX = side === 'left' ? x + 5 : x + 70 - 15; // Ajusta posição do check
-                            const textX = side === 'left' ? x + 25 : x + 25; // Ajusta texto
-                            
-                            return `
-                            <g id="${id}" class="pain-group" onclick="App.Actions.togglePainPoint(this.id, '${label}')">
-                                <line x1="${side === 'left' ? x + 70 : x}" y1="${y + 18/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" />
-                                <rect x="${x}" y="${y}" width="70" height="18" class="diagram-label-box" />
-                                
-                                <!-- Checkbox Quadrado -->
-                                <rect x="${x + 4}" y="${y + 4}" width="10" height="10" rx="2" class="diagram-checkbox" />
-                                
-                                <!-- O "X" interno -->
-                                <path d="M${x + 6} ${y + 6} L${x + 12} ${y + 12} M${x + 12} ${y + 6} L${x + 6} ${y + 12}" stroke="white" stroke-width="1.5" stroke-linecap="round" class="checkbox-mark" />
-                                
-                                <text x="${x + 35}" y="${y + 13}" class="diagram-label-text">${label}</text>
-                            </g>`; 
-                        };
-                        
-                        // O resto do SVG permanece igual, mas chamando a nova labelGroup
+                        const f = "onclick=\"App.Actions.togglePainPoint(this.id, '"; const boxW = 70; const boxH = 18; const tY = 12; const labelGroup = (id, x, y, label, lineX, lineY) => { const side = x < 150 ? 'left' : 'right'; return `<g id="${id}" class="pain-group" ${f}${label}')"><line x1="${side === 'left' ? x + boxW : x}" y1="${y + boxH/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" /><rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" class="diagram-label-box" /><text x="${x + boxW/2}" y="${y + tY}" class="diagram-label-text">${label}</text></g>`; };
                         if (view === 'front') return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Frontal</text><g transform="translate(100, 40) scale(0.7)"><path d="M70 55 Q90 55 100 55 Q110 55 130 55 Q140 60 135 80 L130 90 L100 90 L70 90 L65 80 Q60 60 70 55" class="body-silhouette"/><circle cx="100" cy="30" r="15" class="body-silhouette" /><path d="M80 60 L120 60 L115 90 L85 90 Z" class="body-silhouette"/><rect x="55" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="50" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="132" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="82" y="92" width="36" height="50" rx="2" class="body-silhouette"/><path d="M80 150 L98 150 L95 220 L82 220 Z" class="body-silhouette"/><path d="M102 150 L120 150 L118 220 L105 220 Z" class="body-silhouette"/><rect x="85" y="240" width="12" height="40" rx="2" class="body-silhouette"/><rect x="103" y="240" width="12" height="40" rx="2" class="body-silhouette"/><circle cx="95" cy="28" r="1.5" fill="#475569" /><circle cx="105" cy="28" r="1.5" fill="#475569" /><path d="M97 38 Q100 42 103 38" stroke="#475569" fill="none" stroke-width="1" /></g>${labelGroup('pain-group-Ombro-Esq', 10, 60, 'Ombro Esq', 145, 85)}${labelGroup('pain-group-Biceps-Esq', 10, 90, 'Bíceps Esq', 142, 110)}${labelGroup('pain-group-Cotovelo-Esq', 10, 120, 'Cotovelo Esq', 145, 128)}${labelGroup('pain-group-Antebraco-Esq', 10, 150, 'Antebraço Esq', 140, 145)}${labelGroup('pain-group-Adutor-Esq', 10, 180, 'Adutor Esq', 168, 175)}${labelGroup('pain-group-Joelho-Esq', 10, 210, 'Joelho Esq', 163, 200)}${labelGroup('pain-group-Canela-Esq', 10, 240, 'Tibial Esq', 163, 225)}${labelGroup('pain-group-Tornozelo-Esq', 10, 270, 'Tornozelo Esq', 163, 243)}${labelGroup('pain-group-Ombro-Dir', 260, 60, 'Ombro Dir', 195, 85)}${labelGroup('pain-group-Biceps-Dir', 260, 90, 'Bíceps Dir', 198, 110)}${labelGroup('pain-group-Cotovelo-Dir', 260, 120, 'Cotovelo Dir', 195, 128)}${labelGroup('pain-group-Antebraco-Dir', 260, 150, 'Antebraço Dir', 200, 145)}${labelGroup('pain-group-Adutor-Dir', 260, 180, 'Adutor Dir', 172, 175)}${labelGroup('pain-group-Joelho-Dir', 260, 210, 'Joelho Dir', 177, 200)}${labelGroup('pain-group-Canela-Dir', 260, 240, 'Tibial Dir', 177, 225)}${labelGroup('pain-group-Tornozelo-Dir', 260, 270, 'Tornozelo Dir', 177, 243)}${labelGroup('pain-group-Peitoral', 135, 330, 'Peitoral', 170, 90)}${labelGroup('pain-group-Abdominal', 135, 360, 'Abdominal', 170, 130)}${labelGroup('pain-group-Quadriceps', 135, 390, 'Quadríceps', 165, 160)}</svg>`;
                         else return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Posterior</text><g transform="translate(100, 40) scale(0.7)"><circle cx="100" cy="30" r="15" class="body-silhouette" /><rect x="92" y="45" width="16" height="15" class="body-silhouette"/><path d="M70 60 L130 60 L120 110 L80 110 Z" class="body-silhouette"/><rect x="92" y="110" width="16" height="20" class="body-silhouette"/><rect x="55" y="80" width="20" height="35" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="35" rx="5" class="body-silhouette"/><path d="M80 130 Q90 130 100 130 Q110 130 120 130 Q125 145 120 160 L100 160 L80 160 Q75 145 80 130" class="body-silhouette"/><rect x="82" y="165" width="16" height="55" class="body-silhouette"/><rect x="102" y="165" width="16" height="55" class="body-silhouette"/><ellipse cx="90" cy="260" rx="8" ry="20" class="body-silhouette"/><ellipse cx="110" cy="260" rx="8" ry="20" class="body-silhouette"/><path d="M85 70 L95 70 L90 85 Z" fill="none" stroke="#475569" opacity="0.5"/><path d="M115 70 L105 70 L110 85 Z" fill="none" stroke="#475569" opacity="0.5"/></g>${labelGroup('pain-group-Triceps-Esq', 10, 60, 'Tríceps Esq', 142, 105)}${labelGroup('pain-group-Dorsal-Esq', 10, 90, 'Dorsal Esq', 155, 95)}${labelGroup('pain-group-Lombar-Esq', 10, 120, 'Lombar Esq', 165, 125)}${labelGroup('pain-group-Abdutor-Esq', 10, 150, 'Abdutor Esq', 150, 140)}${labelGroup('pain-group-Isquios-Esq', 10, 180, 'Isquios Esq', 160, 175)}${labelGroup('pain-group-Joelho-Post-Esq', 10, 210, 'Joelho Post E', 163, 200)}${labelGroup('pain-group-Panturrilha-Esq', 10, 240, 'Panturrilha E', 163, 222)}${labelGroup('pain-group-Triceps-Dir', 260, 60, 'Tríceps Dir', 198, 105)}${labelGroup('pain-group-Dorsal-Dir', 260, 90, 'Dorsal Dir', 185, 95)}${labelGroup('pain-group-Lombar-Dir', 260, 120, 'Lombar Dir', 175, 125)}${labelGroup('pain-group-Abdutor-Dir', 260, 150, 'Abdutor Dir', 190, 140)}${labelGroup('pain-group-Isquios-Dir', 260, 180, 'Isquios Dir', 180, 175)}${labelGroup('pain-group-Joelho-Post-Dir', 260, 210, 'Joelho Post D', 177, 200)}${labelGroup('pain-group-Panturrilha-Dir', 260, 240, 'Panturrilha D', 177, 222)}${labelGroup('pain-group-Cervical', 135, 330, 'Cervical', 170, 75)}${labelGroup('pain-group-Toracica', 135, 360, 'Torácica', 170, 100)}${labelGroup('pain-group-Gluteos', 135, 390, 'Glúteos', 170, 145)}</svg>`;
                     }
