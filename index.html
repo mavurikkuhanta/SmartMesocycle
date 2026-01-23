@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v27 | Clean & Backup</title>
+    <title>SmartMesocycle v27.1 | Clean & Backup</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -130,7 +130,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.1</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -379,6 +379,23 @@
                 MockDB._syncAdd('students', student); 
             },
             
+            // --- NOVA FUNÇÃO DE EXCLUSÃO ---
+            deleteStudent: (id) => {
+                // 1. Remove Aluno
+                MockDB._syncDelete('students', id);
+                MockDB.data.students = MockDB.data.students.filter(s => s.id != id);
+
+                // 2. Remove Prescrições Associadas (Limpeza)
+                const studentPrescriptions = MockDB.data.prescription.filter(p => p.studentId == id);
+                studentPrescriptions.forEach(p => MockDB._syncDelete('prescription', p.id));
+                MockDB.data.prescription = MockDB.data.prescription.filter(p => p.studentId != id);
+
+                // 3. Remove Histórico Associado (Limpeza)
+                const studentHistory = MockDB.data.workout_history.filter(h => h.studentId == id);
+                studentHistory.forEach(h => MockDB._syncDelete('workout_history', h.id));
+                MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.studentId != id);
+            },
+
             duplicateStudent: (id) => {
                 const source = MockDB.data.students.find(s => s.id == id);
                 if (!source) return;
@@ -533,6 +550,16 @@
                     event.stopPropagation(); 
                     if(confirm("Deseja criar uma cópia deste aluno (template)?")) { MockDB.duplicateStudent(id); App.navigate('dashboard'); }
                 },
+                
+                // --- NOVA AÇÃO DE EXCLUSÃO ---
+                deleteStudent: (id, event) => {
+                    event.stopPropagation();
+                    if(confirm("ATENÇÃO: Isso excluirá o aluno e TODO o histórico/prescrição dele.\n\nEssa ação não pode ser desfeita. Deseja continuar?")) {
+                        MockDB.deleteStudent(id);
+                        App.navigate('dashboard');
+                    }
+                },
+
                 startTimer: (seconds) => {
                     if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
                     const container = document.getElementById('float-timer');
@@ -776,6 +803,10 @@
                                 <div class="absolute top-2 right-2 flex gap-1">
                                     <button onclick="App.Actions.duplicateStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors" title="Duplicar como Template">
                                         <i class="fa-regular fa-copy text-[10px]"></i>
+                                    </button>
+                                    <!-- NOVO BOTÃO DE EXCLUSÃO -->
+                                    <button onclick="App.Actions.deleteStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-400 flex items-center justify-center transition-colors" title="Excluir Aluno">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-4 mb-4">
