@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v27.25 | Código Completo</title>
+    <title>SmartMesocycle v28.1 | Login Seguro</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -225,7 +225,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v27.25</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v28.1</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -340,6 +340,7 @@
         </div>
     </div>
 
+    <!-- Modal Novo Aluno (Com Senha) -->
     <div id="add-student-modal" class="modal-overlay">
         <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-slate-600 bg-slate-900">
             <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus text-blue-500"></i> Novo Aluno</h3>
@@ -348,11 +349,47 @@
                 <div><label class="text-xs text-slate-400 block mb-1">Objetivo Principal</label><select id="student-goal" class="input-sci"><option value="Hipertrofia">Hipertrofia</option><option value="Emagrecimento">Emagrecimento</option><option value="Força Pura">Força Pura</option><option value="Condicionamento">Condicionamento</option><option value="Reabilitação">Reabilitação</option><option value="Performance Esportiva">Performance Esportiva</option></select></div>
                 <div><label class="text-xs text-blue-400 font-bold block mb-1">Divisão de Treino (Split)</label><select id="student-split" class="input-sci border-blue-500/30"><option value="Fullbody">Fullbody (Corpo Inteiro)</option><option value="Fullbody AB">Fullbody AB</option><option value="ABC">ABC</option><option value="ABCD">ABCD</option><option value="ABCDE">ABCDE</option></select></div>
                 <div><label class="text-xs text-slate-400 block mb-1">Status Inicial</label><select id="student-status" class="input-sci"><option value="active">Ativo</option><option value="warning">Em Observação</option></select></div>
+                <!-- NOVO: Campo de Senha -->
+                <div><label class="text-xs text-purple-400 font-bold block mb-1">Senha de Acesso (PIN)</label><input type="text" id="student-password" class="input-sci border-purple-500/30 text-center tracking-widest font-bold" value="1234" placeholder="1234"></div>
             </div>
             <div class="flex gap-3 mt-6">
                 <button onclick="App.Actions.closeModal('add-student-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
                 <button onclick="App.Actions.saveNewStudent()" class="flex-1 py-2 rounded bg-green-600 text-white hover:bg-green-500 font-bold transition">Matricular</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- NOVO: Modal Editar Aluno -->
+    <div id="edit-student-profile-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-slate-600 bg-slate-900">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-pencil text-yellow-500"></i> Editar Aluno</h3>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-student-id">
+                <div><label class="text-xs text-slate-400 block mb-1">Nome Completo</label><input type="text" id="edit-student-name" class="input-sci" placeholder="Ex: Carlos Silva"></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Objetivo Principal</label><select id="edit-student-goal" class="input-sci"><option value="Hipertrofia">Hipertrofia</option><option value="Emagrecimento">Emagrecimento</option><option value="Força Pura">Força Pura</option><option value="Condicionamento">Condicionamento</option><option value="Reabilitação">Reabilitação</option><option value="Performance Esportiva">Performance Esportiva</option></select></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Status</label><select id="edit-student-status" class="input-sci"><option value="active">Ativo</option><option value="warning">Em Observação</option><option value="inactive">Inativo</option></select></div>
+                <!-- NOVO: Campo de Senha na Edição -->
+                <div><label class="text-xs text-purple-400 font-bold block mb-1">Senha de Acesso (PIN)</label><input type="text" id="edit-student-password" class="input-sci border-purple-500/30 text-center tracking-widest font-bold" placeholder="1234"></div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="App.Actions.closeModal('edit-student-profile-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.saveEditedStudent()" class="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 font-bold transition">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Login do Aluno (PIN) -->
+    <div id="student-login-modal" class="modal-overlay">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-green-500/30 bg-slate-900 flex flex-col items-center animate-slide-up">
+            <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/40">
+                <i class="fa-solid fa-user-lock text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2" id="login-student-name-display">Aluno</h3>
+            <p class="text-slate-400 text-sm mb-6 text-center">Digite sua senha de acesso pessoal.</p>
+            <input type="password" id="login-student-password" class="input-sci text-center text-lg tracking-widest mb-4" placeholder="••••">
+            <input type="hidden" id="login-student-id-target">
+            <button onclick="App.Actions.verifyStudentLogin()" class="w-full py-3 rounded bg-green-600 text-white hover:bg-green-500 font-bold transition shadow-lg">Entrar</button>
+            <button onclick="App.Actions.closeModal('student-login-modal')" class="mt-4 text-xs text-slate-500 hover:text-slate-300">Voltar</button>
         </div>
     </div>
 
@@ -383,7 +420,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- ADAPTADOR DE BANCO DE DADOS HÍBRIDO (V27) ---
+        // --- ADAPTADOR DE BANCO DE DADOS HÍBRIDO (V28) ---
         const MockDB = {
             data: {
                 students: [],
@@ -413,7 +450,12 @@
                     // Busca Alunos
                     document.getElementById('loading-status-text').innerText = "Carregando Alunos...";
                     const sSnap = await getDocs(collection(db, "students"));
-                    MockDB.data.students = sSnap.docs.map(d => ({...d.data(), fireId: d.id})); 
+                    MockDB.data.students = sSnap.docs.map(d => {
+                        // Garante que o aluno tenha senha (fallback para '1234' se for antigo)
+                        const s = d.data();
+                        if (!s.password) s.password = '1234';
+                        return {...s, fireId: d.id};
+                    }); 
                     
                     // Busca Prescrições
                     document.getElementById('loading-status-text').innerText = "Carregando Treinos...";
@@ -465,24 +507,39 @@
             getStudentById: (id) => MockDB.data.students.find(s => s.id == id),
             
             addStudent: (student) => { 
-                // Inicializa com message vazia
+                // Inicializa com message vazia e garante senha
                 const s = {...student, message: ''};
+                if(!s.password) s.password = '1234';
                 MockDB.data.students.push(s); 
                 MockDB._syncAdd('students', s); 
             },
+
+            // NOVO: Função para atualizar perfil do aluno
+            updateStudentProfile: (id, newData) => {
+                const idx = MockDB.data.students.findIndex(s => s.id == id);
+                if (idx !== -1) {
+                    const original = MockDB.data.students[idx];
+                    const updated = { ...original, ...newData };
+                    
+                    // Se mudou o nome, atualiza as iniciais (img)
+                    if (newData.name) {
+                        updated.img = newData.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                    }
+
+                    MockDB.data.students[idx] = updated;
+                    const { fireId, ...clean } = updated;
+                    MockDB._syncUpdate('students', id, clean);
+                }
+            },
             
-            // --- NOVA FUNÇÃO DE EXCLUSÃO ---
             deleteStudent: (id) => {
-                // 1. Remove Aluno
                 MockDB._syncDelete('students', id);
                 MockDB.data.students = MockDB.data.students.filter(s => s.id != id);
 
-                // 2. Remove Prescrições Associadas (Limpeza)
                 const studentPrescriptions = MockDB.data.prescription.filter(p => p.studentId == id);
                 studentPrescriptions.forEach(p => MockDB._syncDelete('prescription', p.id));
                 MockDB.data.prescription = MockDB.data.prescription.filter(p => p.studentId != id);
 
-                // 3. Remove Histórico Associado (Limpeza)
                 const studentHistory = MockDB.data.workout_history.filter(h => h.studentId == id);
                 studentHistory.forEach(h => MockDB._syncDelete('workout_history', h.id));
                 MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.studentId != id);
@@ -507,7 +564,6 @@
                 const sourcePrescription = MockDB.data.prescription.filter(ex => ex.studentId == id);
                 sourcePrescription.forEach(ex => {
                     let newEx = { ...ex, id: Date.now() + Math.random(), studentId: newId, fireId: null };
-                    // Garante estrutura ao duplicar
                     newEx = MockDB._ensureWeeksStructure(newEx);
                     MockDB.data.prescription.push(newEx);
                     MockDB._syncAdd('prescription', newEx);
@@ -524,24 +580,12 @@
 
             getPrescription: (studentId) => {
                 if (!studentId) return [];
-                // CORREÇÃO DE ORDEM: Ordena por ID na exibição também
-                return MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
+                const rawList = MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
+                return rawList.map(ex => MockDB._ensureWeeksStructure(ex));
             },
             
-            // --- CORREÇÃO AQUI ---
-            // A função addExerciseToPrescription agora verifica se "weeks" já existe
-            // para evitar valores undefined vindos do botão rápido
             addExerciseToPrescription: (exData) => { 
-                const newEx = { 
-                    ...exData, 
-                    // REMOVIDO: notes: exData.notes || '', (Não precisa mais no objeto se não for usado na view, mas mal não faz)
-                    weeks: exData.weeks || [
-                        { s: exData.sets || '', r: exData.reps || '', w: exData.load || '' }, 
-                        { s: '', r: '', w: '' }, 
-                        { s: '', r: '', w: '' }, 
-                        { s: '', r: '', w: '' }
-                    ] 
-                };
+                const newEx = MockDB._ensureWeeksStructure(exData);
                 MockDB.data.prescription.push(newEx); 
                 MockDB._syncAdd('prescription', newEx);
             },
@@ -549,16 +593,10 @@
             updateExercise: (id, exData) => {
                 const idx = MockDB.data.prescription.findIndex(e => e.id == id);
                 if (idx !== -1) {
-                    // Mescla os dados mantendo a integridade
                     const original = MockDB.data.prescription[idx];
                     let updated = { ...original, ...exData };
-                    
-                    // Garante estrutura antes de salvar
                     updated = MockDB._ensureWeeksStructure(updated);
-                    
                     MockDB.data.prescription[idx] = updated;
-                    
-                    // Prepara para o Firebase (remove fireId para o update)
                     const { fireId, ...clean } = updated;
                     MockDB._syncUpdate('prescription', id, clean);
                 }
@@ -659,7 +697,37 @@
                     document.getElementById('float-timer').classList.add('hidden');
                     App.navigate('student_checkin');
                 },
+                
+                // --- NOVO FLUXO DE LOGIN SEGURO ---
+                // Agora o filtro é a única forma de ver os alunos, e ao clicar pede senha
                 filterStudents: (query) => { App.Views.renderStudentLogin(document.getElementById('app-content'), query); },
+                
+                // Abre o modal de senha ao clicar no nome
+                promptStudentPassword: (id) => {
+                    const student = MockDB.getStudentById(id);
+                    if(!student) return;
+                    document.getElementById('login-student-name-display').innerText = student.name;
+                    document.getElementById('login-student-id-target').value = id;
+                    document.getElementById('login-student-password').value = '';
+                    document.getElementById('student-login-modal').classList.add('active');
+                    document.getElementById('login-student-password').focus();
+                },
+
+                // Verifica a senha
+                verifyStudentLogin: () => {
+                    const id = parseInt(document.getElementById('login-student-id-target').value);
+                    const password = document.getElementById('login-student-password').value;
+                    const student = MockDB.getStudentById(id);
+
+                    if (student && student.password === password) {
+                        document.getElementById('student-login-modal').classList.remove('active');
+                        App.Actions.selectStudent(id); // Loga o aluno
+                    } else {
+                        alert("Senha incorreta. Tente novamente.");
+                        document.getElementById('login-student-password').value = '';
+                        document.getElementById('login-student-password').focus();
+                    }
+                },
                 
                 selectStudent: (id) => {
                     App.state.activeStudentId = id; App.state.currentDay = 'A';
@@ -670,42 +738,69 @@
                     if(confirm("Deseja criar uma cópia deste aluno (template)?")) { MockDB.duplicateStudent(id); App.navigate('dashboard'); }
                 },
                 
-                // --- NOVA AÇÃO DE EXCLUSÃO ---
                 deleteStudent: (id, event) => {
                     event.stopPropagation();
-                    // Removido confirm para agilidade
                     MockDB.deleteStudent(id);
                     App.navigate('dashboard');
                 },
 
-                // --- NOVO: SALVAR MENSAGEM DO ALUNO (RICH TEXT) ---
+                openEditStudentModal: (id, event) => {
+                    event.stopPropagation();
+                    const student = MockDB.getStudentById(id);
+                    if (!student) return;
+
+                    document.getElementById('edit-student-id').value = student.id;
+                    document.getElementById('edit-student-name').value = student.name;
+                    document.getElementById('edit-student-goal').value = student.goal;
+                    document.getElementById('edit-student-status').value = student.status;
+                    document.getElementById('edit-student-password').value = student.password || ''; 
+
+                    document.getElementById('edit-student-profile-modal').classList.add('active');
+                },
+
+                saveEditedStudent: () => {
+                    const id = parseInt(document.getElementById('edit-student-id').value);
+                    const name = document.getElementById('edit-student-name').value;
+                    const goal = document.getElementById('edit-student-goal').value;
+                    const status = document.getElementById('edit-student-status').value;
+                    const password = document.getElementById('edit-student-password').value;
+
+                    if (!name) return alert("O nome não pode ficar vazio.");
+
+                    MockDB.updateStudentProfile(id, {
+                        name: name,
+                        goal: goal,
+                        status: status,
+                        password: password
+                    });
+
+                    App.Actions.closeModal('edit-student-profile-modal');
+                    App.navigate('dashboard');
+                },
+
                 saveStudentMessage: () => {
                     const editor = document.getElementById('rich-text-editor');
                     if(App.state.activeStudentId && editor) {
                         const content = editor.innerHTML;
                         MockDB.updateStudentMessage(App.state.activeStudentId, content);
                         
-                        // Feedback visual no editor
                         editor.parentElement.classList.add('border-green-500');
                         setTimeout(() => editor.parentElement.classList.remove('border-green-500'), 1000);
                     }
                 },
 
-                // --- NOVO: PASTE INTELIGENTE TABULAR (Apenas Nome e Cadência) ---
                 handleBatchPaste: (event, id) => {
                     const pasteData = (event.clipboardData || window.clipboardData).getData('text');
                     
                     if (!pasteData) return;
 
-                    // Verifica se é colagem em lote (tem quebra de linha)
                     if (pasteData.includes('\n') || pasteData.includes('\r')) {
-                         event.preventDefault(); // Impede o comportamento padrão
+                         event.preventDefault(); 
 
                         const lines = pasteData.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
                         
                         if (lines.length === 0) return;
 
-                        // Mapeamento SIMPLIFICADO: Apenas Nome (col 0) e Cadência (col 1)
                         const fieldMap = [
                             { type: 'main', key: 'name' },
                             { type: 'main', key: 'cadence' }
@@ -714,13 +809,10 @@
                         const parseLineToExercise = (lineData, baseEx) => {
                             let columns = lineData.split('\t');
                             
-                            // Fallback para ponto e vírgula se não tiver tabs
                             if (columns.length < 2 && lineData.includes(';')) columns = lineData.split(';');
 
-                            const ex = JSON.parse(JSON.stringify(baseEx)); // Clone
+                            const ex = JSON.parse(JSON.stringify(baseEx)); 
 
-                            // Itera apenas sobre as colunas que nos interessam (Nome e Cadência)
-                            // Se o paste tiver mais colunas, elas serão ignoradas
                             fieldMap.forEach((mapping, colIdx) => {
                                 if (columns[colIdx] && columns[colIdx].trim() !== '') {
                                     ex[mapping.key] = columns[colIdx].trim();
@@ -729,7 +821,6 @@
                             return ex;
                         };
 
-                        // 1. Atualiza a linha atual
                         const firstLineData = lines[0];
                         let currentEx = MockDB.getExerciseById(id);
                         if (currentEx) {
@@ -739,7 +830,6 @@
                             MockDB.updateExercise(id, updatedEx);
                         }
 
-                        // 2. Cria novas linhas
                         let baseTime = Date.now();
                         lines.slice(1).forEach((lineData, idx) => {
                             const templateEx = {
@@ -763,7 +853,6 @@
 
                         setTimeout(() => {
                             App.navigate('prescription');
-                            // Feedback
                             const btn = document.getElementById('btn-manual-save');
                             if(btn) {
                                 const original = btn.innerHTML;
@@ -772,7 +861,6 @@
                             }
                         }, 100);
                     }
-                    // Se não tiver quebra de linha, deixa o navegador lidar (colar texto simples no input focado)
                 },
 
                 startTimer: (seconds) => {
@@ -805,11 +893,11 @@
                     if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
                     document.getElementById('float-timer').classList.add('hidden');
                 },
+                
                 updatePrescriptionInput: (inputEl, exerciseId, weekIndex, field) => {
                     inputEl.classList.add('saved-pulse'); setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
                     const ex = MockDB.getExerciseById(exerciseId);
                     if(ex) { 
-                        // Verifica e cria a semana se não existir
                         if (!ex.weeks) ex.weeks = [];
                         if (!ex.weeks[weekIndex]) ex.weeks[weekIndex] = { s: '', r: '', w: '' };
                         
@@ -818,7 +906,6 @@
                     }
                 },
                 
-                // NOVO: Atualiza campos principais do exercício (Nome, Cadência, Notas)
                 updateExerciseMainField: (inputEl, exerciseId, field) => {
                     inputEl.classList.add('saved-pulse'); 
                     setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
@@ -829,20 +916,17 @@
                     }
                 },
                 
-                // MODIFICADO: Add Rápido (Skeleton Row com defaults)
                 addQuickRow: () => {
                     if (!App.state.activeStudentId) return alert("Selecione um aluno primeiro!");
-                    // Cria exercício vazio (esqueleto)
                     const newEx = { 
                         id: Date.now(), 
                         studentId: App.state.activeStudentId, 
-                        name: "", // Vazio para digitar/colar
-                        // notes: "", // REMOVIDO
-                        type: "strength", // Default
-                        cadence: "", // Vazio
+                        name: "", 
+                        type: "strength", 
+                        cadence: "", 
                         day: App.state.currentDay,
                         weeks: [
-                            { s: '3', r: '10', w: '' }, // Defaults amigáveis
+                            { s: '3', r: '10', w: '' }, 
                             { s: '', r: '', w: '' }, 
                             { s: '', r: '', w: '' }, 
                             { s: '', r: '', w: '' }
@@ -852,7 +936,6 @@
                     App.navigate('prescription');
                 },
                 
-                // NOVO: Feedback Visual de Salvar
                 saveWorkoutManual: () => {
                     const btn = document.getElementById('btn-manual-save');
                     const originalText = btn.innerHTML;
@@ -860,12 +943,8 @@
                     btn.classList.add('bg-green-600', 'border-green-500');
                     btn.classList.remove('bg-slate-800', 'border-slate-700');
                     
-                    // Salva também a mensagem do editor rico se estiver na tela
                     App.Actions.saveStudentMessage();
 
-                    // Força um refresh "fake" para o usuário sentir que processou, 
-                    // mas na verdade o MockDB já sincronizou tudo em tempo real.
-                    // Apenas atualiza a view para garantir consistência visual.
                     setTimeout(() => {
                         btn.innerHTML = originalText;
                         btn.classList.remove('bg-green-600', 'border-green-500');
@@ -875,8 +954,6 @@
 
                 openAddStudentModal: () => { document.getElementById('student-name').value = ''; document.getElementById('add-student-modal').classList.add('active'); },
                 
-                // REMOVIDO: openEditModal (ainda acessível se quiser manter para detalhes, mas menos crítico)
-                
                 closeModal: (modalId) => document.getElementById(modalId).classList.remove('active'),
                 switchDay: (day) => { App.state.currentDay = day; App.navigate('prescription'); },
                 saveNewStudent: () => {
@@ -884,33 +961,36 @@
                     const goal = document.getElementById('student-goal').value;
                     const status = document.getElementById('student-status').value;
                     const split = document.getElementById('student-split').value; 
+                    const password = document.getElementById('student-password').value;
+
                     if (!name) return alert("Por favor, insira o nome do aluno.");
                     const initials = name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-                    const newStudent = { id: Date.now(), name: name, goal: goal, split: split, status: status, plan: `${split} - Base`, img: initials, alert: false };
+                    const newStudent = { 
+                        id: Date.now(), 
+                        name: name, 
+                        goal: goal, 
+                        split: split, 
+                        status: status, 
+                        password: password,
+                        plan: `${split} - Base`, 
+                        img: initials, 
+                        alert: false 
+                    };
                     MockDB.addStudent(newStudent);
                     App.Actions.closeModal('add-student-modal');
                     App.navigate('dashboard');
                 },
                 updatePrescriptionSplit: (splitValue) => { if(App.state.activeStudentId) { MockDB.updateStudentSplit(App.state.activeStudentId, splitValue); App.state.currentDay = 'A'; App.navigate('prescription'); } },
                 
-                // REMOVIDO: saveExercise (usado no modal antigo)
-                
                 deleteExercise: (id) => { 
-                    // REMOVIDO CONFIRM PARA AGILIDADE
                     MockDB.deleteExercise(id); 
                     App.navigate('prescription'); 
                 },
                 
-                // --- EDITOR RICO: FUNÇÕES ---
                 formatText: (command, value = null) => {
-                    // Mapeamento para garantir tamanhos de 1 a 7 com fontSize
                     if (command === 'decreaseFontSize' || command === 'increaseFontSize') {
-                        // Obtém o tamanho atual ou assume 3 (padrão)
                         let currentSize = document.queryCommandValue('fontSize');
-                        // Se não for numérico (ex: "medium"), converte
                         if (!currentSize) currentSize = 3; 
-                        
-                        // Garante que é número
                         let newSize = parseInt(currentSize);
                         
                         if (command === 'decreaseFontSize') {
@@ -924,23 +1004,12 @@
                     } else {
                         document.execCommand(command, false, value);
                     }
-                    
-                    // Mantém o foco no editor
                     const editor = document.getElementById('rich-text-editor');
                     if (editor) editor.focus();
                 },
 
                 insertTable: () => {
-                    const html = `
-                        <table>
-                            <thead>
-                                <tr><th>Header 1</th><th>Header 2</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>Cell 1</td><td>Cell 2</td></tr>
-                                <tr><td>Cell 3</td><td>Cell 4</td></tr>
-                            </tbody>
-                        </table><br>`; // <br> para poder digitar depois da tabela
+                    const html = `<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table><br>`;
                     document.execCommand('insertHTML', false, html);
                 },
 
@@ -948,29 +1017,20 @@
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
-                    // Procura o elemento <tr> mais próximo
-                    while (node && node.nodeName !== 'TR') {
-                        node = node.parentNode;
-                    }
+                    while (node && node.nodeName !== 'TR') { node = node.parentNode; }
                     if (node && node.nodeName === 'TR') {
                         const newRow = node.cloneNode(true);
-                        // Limpa o conteúdo das células da nova linha
                         const cells = newRow.querySelectorAll('td, th');
                         cells.forEach(cell => cell.innerText = ' ');
                         node.parentNode.insertBefore(newRow, node.nextSibling);
-                    } else {
-                        alert("Clique dentro de uma tabela para adicionar uma linha.");
-                    }
+                    } else { alert("Clique dentro de uma tabela para adicionar uma linha."); }
                 },
 
                 addTableCol: () => {
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
-                    // Procura o <td> ou <th>
-                    while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') {
-                        node = node.parentNode;
-                    }
+                    while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') { node = node.parentNode; }
                     if (node) {
                         const cellIndex = node.cellIndex;
                         const table = node.closest('table');
@@ -980,31 +1040,20 @@
                             newCell.innerText = ' ';
                             newCell.style.border = "1px solid #475569";
                             newCell.style.padding = "0.5rem";
-                            // Se for cabeçalho, aplicar estilo
                             if(rows[i].parentNode.nodeName === 'THEAD') {
                                 newCell.outerHTML = `<th style="border:1px solid #475569;padding:0.5rem;text-align:left;background-color:#1e293b;font-weight:bold;"> </th>`;
                             }
                         }
-                    } else {
-                        alert("Clique dentro de uma tabela para adicionar uma coluna.");
-                    }
+                    } else { alert("Clique dentro de uma tabela para adicionar uma coluna."); }
                 },
 
                 deleteTableElement: () => {
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
-                    // Tenta achar TR ou Table
                     const tr = node.nodeType === 1 ? node.closest('tr') : node.parentElement.closest('tr');
                     const table = node.nodeType === 1 ? node.closest('table') : node.parentElement.closest('table');
-
-                    if (tr) {
-                        tr.remove();
-                    } else if (table) {
-                        table.remove();
-                    } else {
-                        alert("Clique em uma tabela ou linha para apagar.");
-                    }
+                    if (tr) { tr.remove(); } else if (table) { table.remove(); } else { alert("Clique em uma tabela ou linha para apagar."); }
                 },
 
                 togglePainPoint: (groupId, label) => {
@@ -1013,8 +1062,6 @@
                         group.classList.toggle('pain-selected');
                         const idx = App.state.painPoints.indexOf(label);
                         if (idx > -1) { App.state.painPoints.splice(idx, 1); } else { App.state.painPoints.push(label); }
-                        
-                        // Atualiza a lista visual (agora escondida se vazia)
                         App.Views.components.updatePainList();
                     }
                 },
@@ -1106,8 +1153,6 @@
                 
                 // IMPORTANTÍSSIMO: Restaurar estado visual
                 App.state.painPoints.forEach(pain => { 
-                    // Tenta achar o grupo pelo ID gerado a partir do nome
-                    // Ex: 'Ombro Esq' -> 'pain-group-Ombro-Esq'
                     const groupId = `pain-group-${pain.replace(/\s+/g, '-')}`;
                     const group = document.getElementById(groupId);
                     if (group) group.classList.add('pain-selected'); 
@@ -1121,7 +1166,7 @@
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
                             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Smart<span class="text-blue-500">Mesocycle</span></h1>
-                            <p class="text-slate-400 mb-12">Clean & Backup v27.25</p>
+                            <p class="text-slate-400 mb-12">Clean & Backup v28.1</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
                                 <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
                                     <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg"><i class="fa-solid fa-user-tie text-3xl text-blue-400"></i></div>
@@ -1149,6 +1194,12 @@
                                     <button onclick="App.Actions.duplicateStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors" title="Duplicar como Template">
                                         <i class="fa-regular fa-copy text-[10px]"></i>
                                     </button>
+                                    
+                                    <!-- NOVO: BOTÃO DE EDITAR -->
+                                    <button onclick="App.Actions.openEditStudentModal(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-yellow-900/50 text-slate-400 hover:text-yellow-400 flex items-center justify-center transition-colors" title="Editar Perfil">
+                                        <i class="fa-solid fa-pencil text-[10px]"></i>
+                                    </button>
+
                                     <!-- NOVO BOTÃO DE EXCLUSÃO -->
                                     <button onclick="App.Actions.deleteStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-400 flex items-center justify-center transition-colors" title="Excluir Aluno">
                                         <i class="fa-solid fa-trash text-[10px]"></i>
@@ -1242,6 +1293,7 @@
                     const exercises = fullPrescription.filter(ex => (ex.day || 'A') === App.state.currentDay);
                     const tabsHTML = tabs.map(t => `<div onclick="App.Actions.switchDay('${t}')" class="workout-tab ${App.state.currentDay === t ? 'active' : ''}">Treino ${t}</div>`).join('');
                     
+                    // --- ATUALIZADO: Botão Salvar, Layout da Tabela e NOVO EDITOR RICO ---
                     container.innerHTML = `
                     <div class="glass-panel p-4 mb-4 rounded-xl border border-slate-700">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
@@ -1294,20 +1346,56 @@
                     `;
                 },
 
+                // --- FLUXO DE LOGIN SEGURO DO ALUNO ---
                 renderStudentLogin: (container, filter = '') => {
                     const students = MockDB.getStudents();
                     const filtered = students.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+                    
+                    // Se o filtro estiver vazio, não mostra nada (Privacidade total) ou mostra mensagem
+                    let contentHTML = '';
+                    
+                    if (filter.length === 0) {
+                        contentHTML = `
+                            <div class="text-center text-slate-500 mt-8">
+                                <i class="fa-solid fa-search text-4xl mb-4 opacity-50"></i>
+                                <p>Digite seu nome acima para acessar.</p>
+                            </div>
+                        `;
+                    } else if (filtered.length === 0) {
+                        contentHTML = `<p class="col-span-full text-center text-slate-500 italic mt-8">Aluno não encontrado.</p>`;
+                    } else {
+                        // Mostra apenas os nomes que batem com a busca
+                        contentHTML = `<div class="grid grid-cols-1 gap-3 w-full max-w-sm px-4 mt-4">
+                            ${filtered.map(s => `
+                                <div onclick="App.Actions.promptStudentPassword(${s.id})" class="glass-panel p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all border border-slate-700">
+                                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-sm font-bold text-white">${s.img}</div>
+                                    <div class="text-left">
+                                        <p class="font-bold text-white text-sm">${s.name}</p>
+                                    </div>
+                                    <i class="fa-solid fa-lock text-slate-500 ml-auto text-xs"></i>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    }
+
                     container.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
+                        <div class="flex flex-col items-center justify-start h-full animate-fade-in pt-20 pb-20">
                             <div class="absolute top-4 left-4">
                                 <button onclick="App.Actions.logout()" class="flex items-center text-slate-400 hover:text-white transition-colors gap-2 text-sm font-bold bg-slate-800 px-3 py-2 rounded-lg">
                                     <i class="fa-solid fa-arrow-left"></i> Início
                                 </button>
                             </div>
+                            
                             <div class="bg-green-600/20 p-4 rounded-full mb-6 ring-4 ring-green-500/20"><i class="fa-solid fa-running text-4xl text-green-400"></i></div>
                             <h2 class="text-2xl font-bold text-white mb-2">Quem vai treinar?</h2>
-                            <div class="w-full max-w-sm mb-8 relative"><i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i><input type="text" oninput="App.Actions.filterStudents(this.value)" class="w-full bg-slate-800 border border-slate-600 text-white rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-green-500 transition-colors" placeholder="Buscar aluno..." value="${filter}" autofocus></div>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-2xl px-4 max-h-[400px] overflow-y-auto">${filtered.length > 0 ? filtered.map(s => `<div onclick="App.Actions.selectStudent(${s.id})" class="glass-panel p-6 rounded-xl flex flex-col items-center gap-3 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all border border-slate-700"><div class="w-14 h-14 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-lg font-bold text-white group-hover:scale-110 transition-transform">${s.img}</div><div class="text-center"><p class="font-bold text-white text-sm group-hover:text-green-400">${s.name}</p><p class="text-[10px] text-slate-500 uppercase tracking-wider">${s.split || 'Sem Treino'}</p></div></div>`).join('') : '<p class="col-span-full text-center text-slate-500 italic">Nenhum aluno encontrado.</p>'}</div>
+                            
+                            <!-- Busca Focada -->
+                            <div class="w-full max-w-sm relative">
+                                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
+                                <input type="text" oninput="App.Actions.filterStudents(this.value)" class="w-full bg-slate-800 border border-slate-600 text-white rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-green-500 transition-colors" placeholder="Digite seu nome..." value="${filter}" autofocus>
+                            </div>
+                            
+                            ${contentHTML}
                         </div>`;
                 },
 
@@ -1333,10 +1421,8 @@
                         const isToday = i === today.getDate();
                         calendarHTML += `<div class="calendar-day ${hasWorkout ? 'active' : ''} ${isToday ? 'today' : ''}">${i}</div>`;
                     }
-                    const options = (activeStudent.split || 'Fullbody').includes('Fullbody') ? ['A','B'] : ['A','B','C','D','E'];
                     
                     // --- NOVO: SALDO DE TREINOS ---
-                    // Calcula a contagem de cada treino realizado
                     const workoutCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0 };
                     history.forEach(h => {
                         if (workoutCounts.hasOwnProperty(h.day)) {
@@ -1365,6 +1451,8 @@
                         </div>
                     `;
 
+                    const options = studentSplit;
+                    
                     const messageHTML = activeStudent.message ? `
                         <div class="glass-panel p-4 rounded-xl mb-6 border-l-4 border-l-purple-500 animate-fade-in bg-slate-800/80">
                             <h3 class="text-xs font-bold text-purple-400 uppercase mb-2 flex items-center"><i class="fa-solid fa-message mr-2"></i> Recado do Treinador</h3>
@@ -1464,14 +1552,7 @@
                         <div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700">
                             <h4 class="text-sm font-bold text-white mb-4">Feedback da Sessão</h4>
                             <div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-400">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div>
-                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value">
-                            <label class="text-sm font-bold text-white mb-2 block">Notas / Observações</label>
-                            <textarea id="workout-notes" class="input-sci w-full h-24 resize-none" placeholder="Ex: Senti o ombro na elevação lateral..."></textarea>
-                        </div>
-                        
-                        <button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8">Finalizar Treino</button>
-                    </div>`;
-                    
+                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value"><label class="text-sm font-bold text-white mb-2 block">Notas / Observações</label><textarea id="workout-notes" class="input-sci w-full h-24 resize-none" placeholder="Ex: Senti o ombro na elevação lateral..."></textarea></div><button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8">Finalizar Treino</button></div>`;
                     let s=0; const t=document.getElementById('workout-timer'); if(t){ App.state.timerInterval=setInterval(()=>{ s++; t.innerText=`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; },1000); }
                 },
                 renderStudentSummary: (container) => {
@@ -1480,18 +1561,11 @@
                     container.innerHTML = `<div class="max-w-md mx-auto mt-10 text-center px-4"><h2 class="text-2xl font-bold text-white mb-2">Treino Finalizado!</h2><p class="text-slate-400 text-sm mb-6">Sua frequência foi registrada.</p><div class="glass-panel p-6 rounded-xl mb-6 text-left"><div class="grid grid-cols-2 gap-4"><div><p class="text-[10px] text-slate-400 uppercase">Duração</p><p class="text-xl font-bold text-white">${data.duration} min</p></div><div><p class="text-[10px] text-slate-400 uppercase">PSE</p><p class="text-xl font-bold text-white">${data.pse}</p></div><div class="col-span-2 mt-2 pt-2 border-t border-slate-700/50"><p class="text-[10px] text-blue-400 uppercase font-bold">Carga (UA)</p><p class="text-4xl font-bold text-white">${data.internalLoad}</p></div></div></div><button onclick="App.Actions.logout()" class="btn-action bg-slate-800 w-full py-3">Sair</button></div>`;
                 },
                 components: {
-                    // Função auxiliar para atualizar a lista de dores (agora sem texto padrão)
                     updatePainList: () => {
                         const container = document.getElementById('selected-pain-list');
                         if (!container) return;
-                        
-                        // Limpa
                         container.innerHTML = '';
-                        
-                        // Se estiver vazio, não mostra nada (nem mensagem padrão)
                         if (App.state.painPoints.length === 0) return;
-
-                        // Se tiver itens, mostra badges
                         App.state.painPoints.forEach(pain => {
                             const badge = document.createElement('span');
                             badge.className = 'px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/30';
@@ -1499,30 +1573,11 @@
                             container.appendChild(badge);
                         });
                     },
-
                     getBodySVG: (view) => {
-                        // Função auxiliar para gerar o label COM CHECKBOX
                         const labelGroup = (id, x, y, label, lineX, lineY) => { 
                             const side = x < 150 ? 'left' : 'right';
-                            const checkboxX = side === 'left' ? x + 5 : x + 70 - 15; // Ajusta posição do check
-                            const textX = side === 'left' ? x + 25 : x + 25; // Ajusta texto
-                            
-                            return `
-                            <g id="${id}" class="pain-group" onclick="App.Actions.togglePainPoint(this.id, '${label}')">
-                                <line x1="${side === 'left' ? x + 70 : x}" y1="${y + 18/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" />
-                                <rect x="${x}" y="${y}" width="70" height="18" class="diagram-label-box" />
-                                
-                                <!-- Checkbox Quadrado -->
-                                <rect x="${x + 4}" y="${y + 4}" width="10" height="10" rx="2" class="diagram-checkbox" />
-                                
-                                <!-- O "X" interno -->
-                                <path d="M${x + 6} ${y + 6} L${x + 12} ${y + 12} M${x + 12} ${y + 6} L${x + 6} ${y + 12}" stroke="white" stroke-width="1.5" stroke-linecap="round" class="checkbox-mark" />
-                                
-                                <text x="${x + 35}" y="${y + 13}" class="diagram-label-text">${label}</text>
-                            </g>`; 
+                            return `<g id="${id}" class="pain-group" onclick="App.Actions.togglePainPoint(this.id, '${label}')"><line x1="${side === 'left' ? x + 70 : x}" y1="${y + 18/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" /><rect x="${x}" y="${y}" width="70" height="18" class="diagram-label-box" /><text x="${x + 35}" y="${y + 13}" class="diagram-label-text">${label}</text></g>`; 
                         };
-                        
-                        // O resto do SVG permanece igual, mas chamando a nova labelGroup
                         if (view === 'front') return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Frontal</text><g transform="translate(100, 40) scale(0.7)"><path d="M70 55 Q90 55 100 55 Q110 55 130 55 Q140 60 135 80 L130 90 L100 90 L70 90 L65 80 Q60 60 70 55" class="body-silhouette"/><circle cx="100" cy="30" r="15" class="body-silhouette" /><path d="M80 60 L120 60 L115 90 L85 90 Z" class="body-silhouette"/><rect x="55" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="50" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="132" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="82" y="92" width="36" height="50" rx="2" class="body-silhouette"/><path d="M80 150 L98 150 L95 220 L82 220 Z" class="body-silhouette"/><path d="M102 150 L120 150 L118 220 L105 220 Z" class="body-silhouette"/><rect x="85" y="240" width="12" height="40" rx="2" class="body-silhouette"/><rect x="103" y="240" width="12" height="40" rx="2" class="body-silhouette"/><circle cx="95" cy="28" r="1.5" fill="#475569" /><circle cx="105" cy="28" r="1.5" fill="#475569" /><path d="M97 38 Q100 42 103 38" stroke="#475569" fill="none" stroke-width="1" /></g>${labelGroup('pain-group-Ombro-Esq', 10, 60, 'Ombro Esq', 145, 85)}${labelGroup('pain-group-Biceps-Esq', 10, 90, 'Bíceps Esq', 142, 110)}${labelGroup('pain-group-Cotovelo-Esq', 10, 120, 'Cotovelo Esq', 145, 128)}${labelGroup('pain-group-Antebraco-Esq', 10, 150, 'Antebraço Esq', 140, 145)}${labelGroup('pain-group-Adutor-Esq', 10, 180, 'Adutor Esq', 168, 175)}${labelGroup('pain-group-Joelho-Esq', 10, 210, 'Joelho Esq', 163, 200)}${labelGroup('pain-group-Canela-Esq', 10, 240, 'Tibial Esq', 163, 225)}${labelGroup('pain-group-Tornozelo-Esq', 10, 270, 'Tornozelo Esq', 163, 243)}${labelGroup('pain-group-Ombro-Dir', 260, 60, 'Ombro Dir', 195, 85)}${labelGroup('pain-group-Biceps-Dir', 260, 90, 'Bíceps Dir', 198, 110)}${labelGroup('pain-group-Cotovelo-Dir', 260, 120, 'Cotovelo Dir', 195, 128)}${labelGroup('pain-group-Antebraco-Dir', 260, 150, 'Antebraço Dir', 200, 145)}${labelGroup('pain-group-Adutor-Dir', 260, 180, 'Adutor Dir', 172, 175)}${labelGroup('pain-group-Joelho-Dir', 260, 210, 'Joelho Dir', 177, 200)}${labelGroup('pain-group-Canela-Dir', 260, 240, 'Tibial Dir', 177, 225)}${labelGroup('pain-group-Tornozelo-Dir', 260, 270, 'Tornozelo Dir', 177, 243)}${labelGroup('pain-group-Peitoral', 135, 330, 'Peitoral', 170, 90)}${labelGroup('pain-group-Abdominal', 135, 360, 'Abdominal', 170, 130)}${labelGroup('pain-group-Quadriceps', 135, 390, 'Quadríceps', 165, 160)}</svg>`;
                         else return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Posterior</text><g transform="translate(100, 40) scale(0.7)"><circle cx="100" cy="30" r="15" class="body-silhouette" /><rect x="92" y="45" width="16" height="15" class="body-silhouette"/><path d="M70 60 L130 60 L120 110 L80 110 Z" class="body-silhouette"/><rect x="92" y="110" width="16" height="20" class="body-silhouette"/><rect x="55" y="80" width="20" height="35" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="35" rx="5" class="body-silhouette"/><path d="M80 130 Q90 130 100 130 Q110 130 120 130 Q125 145 120 160 L100 160 L80 160 Q75 145 80 130" class="body-silhouette"/><rect x="82" y="165" width="16" height="55" class="body-silhouette"/><rect x="102" y="165" width="16" height="55" class="body-silhouette"/><ellipse cx="90" cy="260" rx="8" ry="20" class="body-silhouette"/><ellipse cx="110" cy="260" rx="8" ry="20" class="body-silhouette"/><path d="M85 70 L95 70 L90 85 Z" fill="none" stroke="#475569" opacity="0.5"/><path d="M115 70 L105 70 L110 85 Z" fill="none" stroke="#475569" opacity="0.5"/></g>${labelGroup('pain-group-Triceps-Esq', 10, 60, 'Tríceps Esq', 142, 105)}${labelGroup('pain-group-Dorsal-Esq', 10, 90, 'Dorsal Esq', 155, 95)}${labelGroup('pain-group-Lombar-Esq', 10, 120, 'Lombar Esq', 165, 125)}${labelGroup('pain-group-Abdutor-Esq', 10, 150, 'Abdutor Esq', 150, 140)}${labelGroup('pain-group-Isquios-Esq', 10, 180, 'Isquios Esq', 160, 175)}${labelGroup('pain-group-Joelho-Post-Esq', 10, 210, 'Joelho Post E', 163, 200)}${labelGroup('pain-group-Panturrilha-Esq', 10, 240, 'Panturrilha E', 163, 222)}${labelGroup('pain-group-Triceps-Dir', 260, 60, 'Tríceps Dir', 198, 105)}${labelGroup('pain-group-Dorsal-Dir', 260, 90, 'Dorsal Dir', 185, 95)}${labelGroup('pain-group-Lombar-Dir', 260, 120, 'Lombar Dir', 175, 125)}${labelGroup('pain-group-Abdutor-Dir', 260, 150, 'Abdutor Dir', 190, 140)}${labelGroup('pain-group-Isquios-Dir', 260, 180, 'Isquios Dir', 180, 175)}${labelGroup('pain-group-Joelho-Post-Dir', 260, 210, 'Joelho Post D', 177, 200)}${labelGroup('pain-group-Panturrilha-Dir', 260, 240, 'Panturrilha D', 177, 222)}${labelGroup('pain-group-Cervical', 135, 330, 'Cervical', 170, 75)}${labelGroup('pain-group-Toracica', 135, 360, 'Torácica', 170, 100)}${labelGroup('pain-group-Gluteos', 135, 390, 'Glúteos', 170, 145)}</svg>`;
                     }
