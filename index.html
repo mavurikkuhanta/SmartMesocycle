@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v28.1 | Login Seguro</title>
+    <title>SmartMesocycle v28.1 | Login Seguro e Corrigido</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1421,6 +1421,7 @@
                         const isToday = i === today.getDate();
                         calendarHTML += `<div class="calendar-day ${hasWorkout ? 'active' : ''} ${isToday ? 'today' : ''}">${i}</div>`;
                     }
+                    const options = (activeStudent.split || 'Fullbody').includes('Fullbody') ? ['A','B'] : ['A','B','C','D','E'];
                     
                     // --- NOVO: SALDO DE TREINOS ---
                     const workoutCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0 };
@@ -1451,8 +1452,6 @@
                         </div>
                     `;
 
-                    const options = studentSplit;
-                    
                     const messageHTML = activeStudent.message ? `
                         <div class="glass-panel p-4 rounded-xl mb-6 border-l-4 border-l-purple-500 animate-fade-in bg-slate-800/80">
                             <h3 class="text-xs font-bold text-purple-400 uppercase mb-2 flex items-center"><i class="fa-solid fa-message mr-2"></i> Recado do Treinador</h3>
