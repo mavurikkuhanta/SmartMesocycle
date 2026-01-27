@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v28.7 | Visual Aluno Pro</title>
+    <title>SmartMesocycle v28.9 | Visual Aluno Pro</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,7 +117,7 @@
         /* ESTILOS DO EDITOR RICO */
         .rich-editor-container { border: 1px solid #334155; border-radius: 0.5rem; overflow: hidden; background: #0f172a; }
         .rich-toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-        .rich-btn { background: #334155; color: #cbd5e1; border: none; border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; }
+        .rich-btn { background: #334155; color: #cbd5e1; border: none; border-radius: 0.25em; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; }
         .rich-btn:hover { background: #475569; color: white; }
         .rich-content { min-height: 150px; padding: 1rem; color: white; outline: none; resize: vertical; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; }
         .rich-content table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; border: 1px solid #475569; }
@@ -229,7 +229,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v28.7</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v28.9</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -1768,8 +1768,53 @@
                     const day = App.state.workoutDayToExecute;
                     
                     const history = MockDB.getHistory(activeStudent.id);
-                    const completedSessions = history.filter(h => h.day === day).length;
-                    const currentWeekIndex = completedSessions % 4;
+
+                    // =================================================================================
+                    // CORREÇÃO CRÍTICA DE SEMANAS - LÓGICA DE FREQUÊNCIA v28.9
+                    // =================================================================================
+                    
+                    // 1. Filtra histórico apenas deste dia (Ex: 'A')
+                    const thisDayHistory = history.filter(h => h.day === day);
+                    
+                    // 2. Helper para identificar a semana do ano de forma segura (Ex: 2024-W10)
+                    // Garante que a data seja interpretada corretamente independente de timestamp ou string
+                    const getWeekID = (dateInput) => {
+                        let d;
+                        try {
+                            // Se for timestamp do Firebase, converte. Se for string/Date, usa direto.
+                            d = (dateInput && typeof dateInput.toDate === 'function') ? dateInput.toDate() : new Date(dateInput);
+                        } catch(e) { d = new Date(); }
+
+                        d.setHours(0,0,0,0);
+                        // Ajuste para ISO Week (começa segunda-feira)
+                        d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const yearStart = new Date(d.getFullYear(),0,1);
+                        const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+                        return `${d.getFullYear()}-W${weekNo}`;
+                    };
+
+                    const currentWeekID = getWeekID(new Date());
+
+                    // 3. Lógica "Past Weeks Only" (Semanas Passadas Apenas)
+                    // Contamos quantas semanas *diferentes* existem no histórico que NÃO SÃO a semana atual.
+                    // Isso permite repetir o treino quantas vezes quiser na semana atual sem pular o ciclo.
+                    
+                    const previousWeeksSet = new Set();
+                    
+                    thisDayHistory.forEach(h => {
+                        const wID = getWeekID(h.date);
+                        if (wID !== currentWeekID) {
+                            previousWeeksSet.add(wID);
+                        }
+                    });
+
+                    // O índice é baseado puramente no histórico passado.
+                    // Ex: Se treinei em 2 semanas passadas, o tamanho é 2. 2 % 4 = 2 (Semana 3).
+                    // Ex: Se nunca treinei (0), tamanho é 0. 0 % 4 = 0 (Semana 1).
+                    const currentWeekIndex = previousWeeksSet.size % 4;
+
+                    // =================================================================================
+
                     const weekNames = ['Base', 'Acúmulo', 'Choque', 'Deload'];
                     const currentWeekName = weekNames[currentWeekIndex];
 
