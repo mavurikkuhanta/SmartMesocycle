@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v28.1 | Login Seguro e Corrigido</title>
+    <title>SmartMesocycle v28.4 | Fix Data Relatório</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -207,6 +207,10 @@
         .badge-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
         .badge-warning { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
         .badge-inactive { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+        
+        /* NOVO: Estilo para linha de atendimento presencial */
+        .presence-row { background-color: rgba(234, 179, 8, 0.05); } 
+        .presence-badge { background-color: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -225,7 +229,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v28.1</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v28.4</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -326,16 +330,65 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação Finalizar Treino -->
+    <!-- Modal de Confirmação Finalizar Treino (ATUALIZADO) -->
     <div id="finish-workout-confirm-modal" class="modal-overlay">
         <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-blue-500/30 bg-slate-900 animate-slide-up">
             <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
                 <i class="fa-solid fa-flag-checkered text-blue-500"></i> Finalizar Sessão
             </h3>
-            <p class="text-slate-300 text-sm mb-6">Deseja realmente finalizar? Isso salvará o treino no seu histórico.</p>
+            <p class="text-slate-300 text-sm mb-4">Confirme os dados antes de salvar:</p>
+            
+            <div class="mb-6 space-y-3">
+                 <!-- NOVO: Campo de Duração Manual -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Duração Real (min)</label>
+                    <input type="number" id="manual-workout-duration" class="input-sci text-center font-bold text-lg border-blue-500/30" value="0">
+                </div>
+            </div>
+
             <div class="flex gap-3">
                 <button onclick="App.Actions.closeModal('finish-workout-confirm-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Voltar ao Treino</button>
                 <button onclick="App.Actions.confirmFinishWorkout()" class="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-500 font-bold transition">Confirmar e Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Registrar Presencial -->
+    <div id="register-presence-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-yellow-500/30 bg-slate-900">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-person-chalkboard text-yellow-500"></i> Registro Presencial
+            </h3>
+            <p class="text-slate-400 text-xs mb-4">Você está registrando que acompanhou este treino pessoalmente.</p>
+            
+            <div class="space-y-4">
+                 <div>
+                    <label class="text-xs text-slate-400 block mb-1">Qual treino foi feito?</label>
+                    <select id="presence-workout-day" class="input-sci bg-slate-800">
+                        <option value="A">Treino A</option>
+                        <option value="B">Treino B</option>
+                        <option value="C">Treino C</option>
+                        <option value="D">Treino D</option>
+                        <option value="E">Treino E</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Duração (min)</label>
+                    <input type="number" id="presence-duration" class="input-sci" value="60">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">PSE Observada (0-10)</label>
+                    <input type="number" id="presence-pse" class="input-sci" value="8" min="0" max="10">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Notas do Professor</label>
+                    <textarea id="presence-notes" class="input-sci h-20 resize-none" placeholder="Ex: Técnica melhorou no agachamento."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="App.Actions.closeModal('register-presence-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.confirmPresenceWorkout()" class="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 font-bold transition">Salvar Registro</button>
             </div>
         </div>
     </div>
@@ -359,7 +412,7 @@
         </div>
     </div>
     
-    <!-- NOVO: Modal Editar Aluno -->
+    <!-- Modal Editar Aluno -->
     <div id="edit-student-profile-modal" class="modal-overlay">
         <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-slate-600 bg-slate-900">
             <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-pencil text-yellow-500"></i> Editar Aluno</h3>
@@ -451,7 +504,6 @@
                     document.getElementById('loading-status-text').innerText = "Carregando Alunos...";
                     const sSnap = await getDocs(collection(db, "students"));
                     MockDB.data.students = sSnap.docs.map(d => {
-                        // Garante que o aluno tenha senha (fallback para '1234' se for antigo)
                         const s = d.data();
                         if (!s.password) s.password = '1234';
                         return {...s, fireId: d.id};
@@ -532,14 +584,18 @@
                 }
             },
             
+            // --- NOVA FUNÇÃO DE EXCLUSÃO ---
             deleteStudent: (id) => {
+                // 1. Remove Aluno
                 MockDB._syncDelete('students', id);
                 MockDB.data.students = MockDB.data.students.filter(s => s.id != id);
 
+                // 2. Remove Prescrições Associadas (Limpeza)
                 const studentPrescriptions = MockDB.data.prescription.filter(p => p.studentId == id);
                 studentPrescriptions.forEach(p => MockDB._syncDelete('prescription', p.id));
                 MockDB.data.prescription = MockDB.data.prescription.filter(p => p.studentId != id);
 
+                // 3. Remove Histórico Associado (Limpeza)
                 const studentHistory = MockDB.data.workout_history.filter(h => h.studentId == id);
                 studentHistory.forEach(h => MockDB._syncDelete('workout_history', h.id));
                 MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.studentId != id);
@@ -564,6 +620,7 @@
                 const sourcePrescription = MockDB.data.prescription.filter(ex => ex.studentId == id);
                 sourcePrescription.forEach(ex => {
                     let newEx = { ...ex, id: Date.now() + Math.random(), studentId: newId, fireId: null };
+                    // Garante estrutura ao duplicar
                     newEx = MockDB._ensureWeeksStructure(newEx);
                     MockDB.data.prescription.push(newEx);
                     MockDB._syncAdd('prescription', newEx);
@@ -580,12 +637,24 @@
 
             getPrescription: (studentId) => {
                 if (!studentId) return [];
-                const rawList = MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
-                return rawList.map(ex => MockDB._ensureWeeksStructure(ex));
+                // CORREÇÃO DE ORDEM: Ordena por ID na exibição também
+                return MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
             },
             
+            // --- CORREÇÃO AQUI ---
+            // A função addExerciseToPrescription agora verifica se "weeks" já existe
+            // para evitar valores undefined vindos do botão rápido
             addExerciseToPrescription: (exData) => { 
-                const newEx = MockDB._ensureWeeksStructure(exData);
+                const newEx = { 
+                    ...exData, 
+                    // REMOVIDO: notes: exData.notes || '', (Não precisa mais no objeto se não for usado na view, mas mal não faz)
+                    weeks: exData.weeks || [
+                        { s: exData.sets || '', r: exData.reps || '', w: exData.load || '' }, 
+                        { s: '', r: '', w: '' }, 
+                        { s: '', r: '', w: '' }, 
+                        { s: '', r: '', w: '' }
+                    ] 
+                };
                 MockDB.data.prescription.push(newEx); 
                 MockDB._syncAdd('prescription', newEx);
             },
@@ -593,10 +662,16 @@
             updateExercise: (id, exData) => {
                 const idx = MockDB.data.prescription.findIndex(e => e.id == id);
                 if (idx !== -1) {
+                    // Mescla os dados mantendo a integridade
                     const original = MockDB.data.prescription[idx];
                     let updated = { ...original, ...exData };
+                    
+                    // Garante estrutura antes de salvar
                     updated = MockDB._ensureWeeksStructure(updated);
+                    
                     MockDB.data.prescription[idx] = updated;
+                    
+                    // Prepara para o Firebase (remove fireId para o update)
                     const { fireId, ...clean } = updated;
                     MockDB._syncUpdate('prescription', id, clean);
                 }
@@ -626,6 +701,31 @@
             }
         };
 
+        // --- APP HELPERS (FOR FORMATTING) ---
+        // Helper to safely format dates handling both Firestore Timestamps and standard Dates
+        const formatDate = (dateInput) => {
+            try {
+                if (dateInput && typeof dateInput.toDate === 'function') {
+                    return dateInput.toDate().toLocaleDateString('pt-BR');
+                }
+                return new Date(dateInput).toLocaleDateString('pt-BR');
+            } catch (e) {
+                return 'Data Inválida';
+            }
+        };
+
+        const formatTime = (dateInput) => {
+            try {
+                if (dateInput && typeof dateInput.toDate === 'function') {
+                    return dateInput.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                }
+                return new Date(dateInput).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return '--:--';
+            }
+        };
+
+
         // --- APP CONTROLLER ---
         const App = {
             state: { 
@@ -639,10 +739,53 @@
                 const loader = document.getElementById('cloud-loader');
                 await MockDB.initCloud();
                 loader.classList.add('hidden');
+                
+                // --- NOVO: PERSISTÊNCIA (RECUPERAR SESSÃO) ---
+                const savedState = localStorage.getItem('smartMeso_studentState');
+                if (savedState) {
+                    try {
+                        const parsed = JSON.parse(savedState);
+                        // Só restaura se o estado for recente (menos de 3 horas) para evitar sessões velhas
+                        if (Date.now() - parsed.timestamp < 10800000) { 
+                            App.state.activeStudentId = parsed.studentId;
+                            App.state.workoutDayToExecute = parsed.day;
+                            App.state.painPoints = parsed.pain || [];
+                            App.state.role = 'student';
+                            
+                            // Se tinha treino em andamento, restaura o timer
+                            if(parsed.startTime) {
+                                App.state.workoutStartTime = new Date(parsed.startTime);
+                                App.navigate('student_workout');
+                            } else {
+                                App.navigate('student_checkin');
+                            }
+                            return; // Sai da função init para não ir pra landing
+                        }
+                    } catch(e) { console.error("Erro ao restaurar sessão:", e); }
+                }
+
                 App.navigate('landing');
             },
             
             Actions: {
+                // --- NOVO: PERSISTÊNCIA (SALVAR SESSÃO) ---
+                saveLocalState: () => {
+                    if (App.state.role === 'student' && App.state.activeStudentId) {
+                        const stateToSave = {
+                            studentId: App.state.activeStudentId,
+                            day: App.state.workoutDayToExecute,
+                            pain: App.state.painPoints,
+                            startTime: App.state.workoutStartTime ? App.state.workoutStartTime.getTime() : null,
+                            timestamp: Date.now()
+                        };
+                        localStorage.setItem('smartMeso_studentState', JSON.stringify(stateToSave));
+                    }
+                },
+                
+                clearLocalState: () => {
+                    localStorage.removeItem('smartMeso_studentState');
+                },
+
                 startCoachFlow: () => { document.getElementById('coach-login-modal').classList.add('active'); document.getElementById('coach-password').value = ''; document.getElementById('coach-password').focus(); },
                 verifyCoachLogin: () => {
                     const pass = document.getElementById('coach-password').value;
@@ -666,6 +809,7 @@
                 },
                 logout: () => {
                     App.state.role = null; App.state.activeStudentId = null;
+                    App.Actions.clearLocalState(); // Limpa sessão
                     document.getElementById('sidebar').classList.add('hidden');
                     document.getElementById('coach-login-modal').classList.remove('active');
                     document.getElementById('float-timer').classList.add('hidden');
@@ -691,15 +835,14 @@
                     document.body.removeChild(a);
                 },
 
-                goBackToLogin: () => { App.state.activeStudentId = null; App.navigate('student_login'); },
+                goBackToLogin: () => { App.state.activeStudentId = null; App.Actions.clearLocalState(); App.navigate('student_login'); },
                 goBackToCheckin: () => {
                     if(App.state.timerInterval) clearInterval(App.state.timerInterval);
+                    App.state.workoutStartTime = null; // Reseta timer
+                    App.Actions.saveLocalState();
                     document.getElementById('float-timer').classList.add('hidden');
                     App.navigate('student_checkin');
                 },
-                
-                // --- NOVO FLUXO DE LOGIN SEGURO ---
-                // Agora o filtro é a única forma de ver os alunos, e ao clicar pede senha
                 filterStudents: (query) => { App.Views.renderStudentLogin(document.getElementById('app-content'), query); },
                 
                 // Abre o modal de senha ao clicar no nome
@@ -731,17 +874,23 @@
                 
                 selectStudent: (id) => {
                     App.state.activeStudentId = id; App.state.currentDay = 'A';
-                    if (App.state.role === 'student') { App.navigate('student_checkin'); } else { App.navigate('prescription'); }
+                    if (App.state.role === 'student') { 
+                        App.navigate('student_checkin'); 
+                        App.Actions.saveLocalState(); // Salva logo no início
+                    } else { App.navigate('prescription'); }
                 },
                 duplicateStudent: (id, event) => {
                     event.stopPropagation(); 
                     if(confirm("Deseja criar uma cópia deste aluno (template)?")) { MockDB.duplicateStudent(id); App.navigate('dashboard'); }
                 },
                 
+                // --- NOVA AÇÃO DE EXCLUSÃO ---
                 deleteStudent: (id, event) => {
                     event.stopPropagation();
-                    MockDB.deleteStudent(id);
-                    App.navigate('dashboard');
+                    if(confirm("ATENÇÃO: Isso excluirá o aluno e TODO o histórico/prescrição dele.\n\nEssa ação não pode ser desfeita. Deseja continuar?")) {
+                        MockDB.deleteStudent(id);
+                        App.navigate('dashboard');
+                    }
                 },
 
                 openEditStudentModal: (id, event) => {
@@ -778,29 +927,66 @@
                     App.navigate('dashboard');
                 },
 
+                // --- NOVO: REGISTRAR TREINO PRESENCIAL ---
+                openPresenceModal: () => {
+                    if (!App.state.activeStudentId) return;
+                    document.getElementById('register-presence-modal').classList.add('active');
+                    document.getElementById('presence-notes').value = '';
+                },
+
+                confirmPresenceWorkout: () => {
+                    if (!App.state.activeStudentId) return;
+                    
+                    const day = document.getElementById('presence-workout-day').value;
+                    const duration = document.getElementById('presence-duration').value || 60;
+                    const pse = document.getElementById('presence-pse').value || 8;
+                    const notes = document.getElementById('presence-notes').value;
+
+                    const workoutData = { 
+                        date: new Date(), 
+                        studentId: App.state.activeStudentId, 
+                        day: day, 
+                        duration: duration, 
+                        pse: parseInt(pse), 
+                        observations: notes + " [PRESENCIAL]", 
+                        internalLoad: parseInt(pse) * duration, 
+                        pain: [], 
+                        type: 'presencial' 
+                    };
+                    
+                    MockDB.saveWorkout(workoutData);
+                    App.Actions.closeModal('register-presence-modal');
+                    alert("Treino presencial registrado com sucesso!");
+                },
+
+                // --- NOVO: SALVAR MENSAGEM DO ALUNO (RICH TEXT) ---
                 saveStudentMessage: () => {
                     const editor = document.getElementById('rich-text-editor');
                     if(App.state.activeStudentId && editor) {
                         const content = editor.innerHTML;
                         MockDB.updateStudentMessage(App.state.activeStudentId, content);
                         
+                        // Feedback visual no editor
                         editor.parentElement.classList.add('border-green-500');
                         setTimeout(() => editor.parentElement.classList.remove('border-green-500'), 1000);
                     }
                 },
 
+                // --- NOVO: PASTE INTELIGENTE TABULAR (Apenas Nome e Cadência) ---
                 handleBatchPaste: (event, id) => {
                     const pasteData = (event.clipboardData || window.clipboardData).getData('text');
                     
                     if (!pasteData) return;
 
+                    // Verifica se é colagem em lote (tem quebra de linha)
                     if (pasteData.includes('\n') || pasteData.includes('\r')) {
-                         event.preventDefault(); 
+                         event.preventDefault(); // Impede o comportamento padrão
 
                         const lines = pasteData.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
                         
                         if (lines.length === 0) return;
 
+                        // Mapeamento SIMPLIFICADO: Apenas Nome (col 0) e Cadência (col 1)
                         const fieldMap = [
                             { type: 'main', key: 'name' },
                             { type: 'main', key: 'cadence' }
@@ -809,10 +995,13 @@
                         const parseLineToExercise = (lineData, baseEx) => {
                             let columns = lineData.split('\t');
                             
+                            // Fallback para ponto e vírgula se não tiver tabs
                             if (columns.length < 2 && lineData.includes(';')) columns = lineData.split(';');
 
-                            const ex = JSON.parse(JSON.stringify(baseEx)); 
+                            const ex = JSON.parse(JSON.stringify(baseEx)); // Clone
 
+                            // Itera apenas sobre as colunas que nos interessam (Nome e Cadência)
+                            // Se o paste tiver mais colunas, elas serão ignoradas
                             fieldMap.forEach((mapping, colIdx) => {
                                 if (columns[colIdx] && columns[colIdx].trim() !== '') {
                                     ex[mapping.key] = columns[colIdx].trim();
@@ -821,6 +1010,7 @@
                             return ex;
                         };
 
+                        // 1. Atualiza a linha atual
                         const firstLineData = lines[0];
                         let currentEx = MockDB.getExerciseById(id);
                         if (currentEx) {
@@ -830,6 +1020,7 @@
                             MockDB.updateExercise(id, updatedEx);
                         }
 
+                        // 2. Cria novas linhas
                         let baseTime = Date.now();
                         lines.slice(1).forEach((lineData, idx) => {
                             const templateEx = {
@@ -853,6 +1044,7 @@
 
                         setTimeout(() => {
                             App.navigate('prescription');
+                            // Feedback
                             const btn = document.getElementById('btn-manual-save');
                             if(btn) {
                                 const original = btn.innerHTML;
@@ -861,6 +1053,7 @@
                             }
                         }, 100);
                     }
+                    // Se não tiver quebra de linha, deixa o navegador lidar (colar texto simples no input focado)
                 },
 
                 startTimer: (seconds) => {
@@ -893,11 +1086,11 @@
                     if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
                     document.getElementById('float-timer').classList.add('hidden');
                 },
-                
                 updatePrescriptionInput: (inputEl, exerciseId, weekIndex, field) => {
                     inputEl.classList.add('saved-pulse'); setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
                     const ex = MockDB.getExerciseById(exerciseId);
                     if(ex) { 
+                        // Verifica e cria a semana se não existir
                         if (!ex.weeks) ex.weeks = [];
                         if (!ex.weeks[weekIndex]) ex.weeks[weekIndex] = { s: '', r: '', w: '' };
                         
@@ -906,6 +1099,7 @@
                     }
                 },
                 
+                // NOVO: Atualiza campos principais do exercício (Nome, Cadência, Notas)
                 updateExerciseMainField: (inputEl, exerciseId, field) => {
                     inputEl.classList.add('saved-pulse'); 
                     setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
@@ -916,17 +1110,20 @@
                     }
                 },
                 
+                // MODIFICADO: Add Rápido (Skeleton Row com defaults)
                 addQuickRow: () => {
                     if (!App.state.activeStudentId) return alert("Selecione um aluno primeiro!");
+                    // Cria exercício vazio (esqueleto)
                     const newEx = { 
                         id: Date.now(), 
                         studentId: App.state.activeStudentId, 
-                        name: "", 
-                        type: "strength", 
-                        cadence: "", 
+                        name: "", // Vazio para digitar/colar
+                        // notes: "", // REMOVIDO
+                        type: "strength", // Default
+                        cadence: "", // Vazio
                         day: App.state.currentDay,
                         weeks: [
-                            { s: '3', r: '10', w: '' }, 
+                            { s: '3', r: '10', w: '' }, // Defaults amigáveis
                             { s: '', r: '', w: '' }, 
                             { s: '', r: '', w: '' }, 
                             { s: '', r: '', w: '' }
@@ -936,6 +1133,7 @@
                     App.navigate('prescription');
                 },
                 
+                // NOVO: Feedback Visual de Salvar
                 saveWorkoutManual: () => {
                     const btn = document.getElementById('btn-manual-save');
                     const originalText = btn.innerHTML;
@@ -943,8 +1141,12 @@
                     btn.classList.add('bg-green-600', 'border-green-500');
                     btn.classList.remove('bg-slate-800', 'border-slate-700');
                     
+                    // Salva também a mensagem do editor rico se estiver na tela
                     App.Actions.saveStudentMessage();
 
+                    // Força um refresh "fake" para o usuário sentir que processou, 
+                    // mas na verdade o MockDB já sincronizou tudo em tempo real.
+                    // Apenas atualiza a view para garantir consistência visual.
                     setTimeout(() => {
                         btn.innerHTML = originalText;
                         btn.classList.remove('bg-green-600', 'border-green-500');
@@ -954,6 +1156,8 @@
 
                 openAddStudentModal: () => { document.getElementById('student-name').value = ''; document.getElementById('add-student-modal').classList.add('active'); },
                 
+                // REMOVIDO: openEditModal (ainda acessível se quiser manter para detalhes, mas menos crítico)
+                
                 closeModal: (modalId) => document.getElementById(modalId).classList.remove('active'),
                 switchDay: (day) => { App.state.currentDay = day; App.navigate('prescription'); },
                 saveNewStudent: () => {
@@ -961,36 +1165,33 @@
                     const goal = document.getElementById('student-goal').value;
                     const status = document.getElementById('student-status').value;
                     const split = document.getElementById('student-split').value; 
-                    const password = document.getElementById('student-password').value;
-
                     if (!name) return alert("Por favor, insira o nome do aluno.");
                     const initials = name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-                    const newStudent = { 
-                        id: Date.now(), 
-                        name: name, 
-                        goal: goal, 
-                        split: split, 
-                        status: status, 
-                        password: password,
-                        plan: `${split} - Base`, 
-                        img: initials, 
-                        alert: false 
-                    };
+                    const newStudent = { id: Date.now(), name: name, goal: goal, split: split, status: status, plan: `${split} - Base`, img: initials, alert: false };
                     MockDB.addStudent(newStudent);
                     App.Actions.closeModal('add-student-modal');
                     App.navigate('dashboard');
                 },
                 updatePrescriptionSplit: (splitValue) => { if(App.state.activeStudentId) { MockDB.updateStudentSplit(App.state.activeStudentId, splitValue); App.state.currentDay = 'A'; App.navigate('prescription'); } },
                 
+                // REMOVIDO: saveExercise (usado no modal antigo)
+                
                 deleteExercise: (id) => { 
+                    // REMOVIDO CONFIRM PARA AGILIDADE
                     MockDB.deleteExercise(id); 
                     App.navigate('prescription'); 
                 },
                 
+                // --- EDITOR RICO: FUNÇÕES ---
                 formatText: (command, value = null) => {
+                    // Mapeamento para garantir tamanhos de 1 a 7 com fontSize
                     if (command === 'decreaseFontSize' || command === 'increaseFontSize') {
+                        // Obtém o tamanho atual ou assume 3 (padrão)
                         let currentSize = document.queryCommandValue('fontSize');
+                        // Se não for numérico (ex: "medium"), converte
                         if (!currentSize) currentSize = 3; 
+                        
+                        // Garante que é número
                         let newSize = parseInt(currentSize);
                         
                         if (command === 'decreaseFontSize') {
@@ -1004,12 +1205,23 @@
                     } else {
                         document.execCommand(command, false, value);
                     }
+                    
+                    // Mantém o foco no editor
                     const editor = document.getElementById('rich-text-editor');
                     if (editor) editor.focus();
                 },
 
                 insertTable: () => {
-                    const html = `<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table><br>`;
+                    const html = `
+                        <table>
+                            <thead>
+                                <tr><th>Header 1</th><th>Header 2</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Cell 1</td><td>Cell 2</td></tr>
+                                <tr><td>Cell 3</td><td>Cell 4</td></tr>
+                            </tbody>
+                        </table><br>`; // <br> para poder digitar depois da tabela
                     document.execCommand('insertHTML', false, html);
                 },
 
@@ -1017,20 +1229,29 @@
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
-                    while (node && node.nodeName !== 'TR') { node = node.parentNode; }
+                    // Procura o elemento <tr> mais próximo
+                    while (node && node.nodeName !== 'TR') {
+                        node = node.parentNode;
+                    }
                     if (node && node.nodeName === 'TR') {
                         const newRow = node.cloneNode(true);
+                        // Limpa o conteúdo das células da nova linha
                         const cells = newRow.querySelectorAll('td, th');
                         cells.forEach(cell => cell.innerText = ' ');
                         node.parentNode.insertBefore(newRow, node.nextSibling);
-                    } else { alert("Clique dentro de uma tabela para adicionar uma linha."); }
+                    } else {
+                        alert("Clique dentro de uma tabela para adicionar uma linha.");
+                    }
                 },
 
                 addTableCol: () => {
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
-                    while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') { node = node.parentNode; }
+                    // Procura o <td> ou <th>
+                    while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') {
+                        node = node.parentNode;
+                    }
                     if (node) {
                         const cellIndex = node.cellIndex;
                         const table = node.closest('table');
@@ -1040,20 +1261,31 @@
                             newCell.innerText = ' ';
                             newCell.style.border = "1px solid #475569";
                             newCell.style.padding = "0.5rem";
+                            // Se for cabeçalho, aplicar estilo
                             if(rows[i].parentNode.nodeName === 'THEAD') {
                                 newCell.outerHTML = `<th style="border:1px solid #475569;padding:0.5rem;text-align:left;background-color:#1e293b;font-weight:bold;"> </th>`;
                             }
                         }
-                    } else { alert("Clique dentro de uma tabela para adicionar uma coluna."); }
+                    } else {
+                        alert("Clique dentro de uma tabela para adicionar uma coluna.");
+                    }
                 },
 
                 deleteTableElement: () => {
                     const sel = window.getSelection();
                     if (!sel.rangeCount) return;
                     let node = sel.anchorNode;
+                    // Tenta achar TR ou Table
                     const tr = node.nodeType === 1 ? node.closest('tr') : node.parentElement.closest('tr');
                     const table = node.nodeType === 1 ? node.closest('table') : node.parentElement.closest('table');
-                    if (tr) { tr.remove(); } else if (table) { table.remove(); } else { alert("Clique em uma tabela ou linha para apagar."); }
+
+                    if (tr) {
+                        tr.remove();
+                    } else if (table) {
+                        table.remove();
+                    } else {
+                        alert("Clique em uma tabela ou linha para apagar.");
+                    }
                 },
 
                 togglePainPoint: (groupId, label) => {
@@ -1062,6 +1294,8 @@
                         group.classList.toggle('pain-selected');
                         const idx = App.state.painPoints.indexOf(label);
                         if (idx > -1) { App.state.painPoints.splice(idx, 1); } else { App.state.painPoints.push(label); }
+                        
+                        // Atualiza a lista visual (agora escondida se vazia)
                         App.Views.components.updatePainList();
                     }
                 },
@@ -1075,7 +1309,7 @@
 
                     let csvContent = "Data;Treino;Duracao (min);PSE;Observacoes;Carga Interna (UA)\n";
                     history.forEach(row => {
-                        const date = new Date(row.date).toLocaleDateString('pt-BR');
+                        const date = formatDate(row.date);
                         const obs = row.observations ? row.observations.replace(/(\r\n|\n|\r|;)/gm, " ") : "-";
                         csvContent += `${date};Treino ${row.day};${row.duration};${row.pse};"${obs}";${row.internalLoad}\n`;
                     });
@@ -1103,21 +1337,34 @@
                     const selectedDay = document.getElementById('workout-day-select').value;
                     App.state.workoutDayToExecute = selectedDay;
                     App.state.workoutStartTime = new Date(); 
+                    App.Actions.saveLocalState();
                     App.navigate('student_workout'); 
                 },
-                askToFinishWorkout: () => { document.getElementById('finish-workout-confirm-modal').classList.add('active'); },
+                askToFinishWorkout: () => { 
+                    const durationMin = Math.round((new Date() - App.state.workoutStartTime) / 60000);
+                    document.getElementById('manual-workout-duration').value = durationMin > 0 ? durationMin : 0;
+                    document.getElementById('finish-workout-confirm-modal').classList.add('active'); 
+                },
                 confirmFinishWorkout: () => {
                     App.Actions.closeModal('finish-workout-confirm-modal');
                     const pse = document.getElementById('slider-pse').value;
                     const obs = document.getElementById('workout-notes').value; 
-                    const durationMin = Math.round((new Date() - App.state.workoutStartTime) / 60000);
-                    const load = pse * durationMin;
+                    const durationManual = parseInt(document.getElementById('manual-workout-duration').value) || 0;
+                    const load = pse * durationManual;
                     const workoutData = { 
-                        date: new Date(), studentId: App.state.activeStudentId, day: App.state.workoutDayToExecute, 
-                        duration: durationMin, pse: parseInt(pse), observations: obs, internalLoad: load, pain: App.state.painPoints 
+                        date: new Date(), 
+                        studentId: App.state.activeStudentId, 
+                        day: App.state.workoutDayToExecute, 
+                        duration: durationManual, 
+                        pse: parseInt(pse), 
+                        observations: obs, 
+                        internalLoad: load, 
+                        pain: App.state.painPoints 
                     };
                     MockDB.saveWorkout(workoutData);
                     App.tempSummary = workoutData;
+                    App.Actions.clearLocalState();
+                    App.state.workoutStartTime = null;
                     App.navigate('student_summary');
                 }
             },
@@ -1151,7 +1398,6 @@
                 document.getElementById('btn-front').className = view === 'front' ? 'px-3 py-1 bg-slate-700 text-white rounded text-xs' : 'px-3 py-1 text-slate-500 hover:text-white rounded text-xs';
                 document.getElementById('btn-back').className = view === 'back' ? 'px-3 py-1 bg-slate-700 text-white rounded text-xs' : 'px-3 py-1 text-slate-500 hover:text-white rounded text-xs';
                 
-                // IMPORTANTÍSSIMO: Restaurar estado visual
                 App.state.painPoints.forEach(pain => { 
                     const groupId = `pain-group-${pain.replace(/\s+/g, '-')}`;
                     const group = document.getElementById(groupId);
@@ -1166,7 +1412,7 @@
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
                             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Smart<span class="text-blue-500">Mesocycle</span></h1>
-                            <p class="text-slate-400 mb-12">Clean & Backup v28.1</p>
+                            <p class="text-slate-400 mb-12">Clean & Backup v28.4</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
                                 <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
                                     <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg"><i class="fa-solid fa-user-tie text-3xl text-blue-400"></i></div>
@@ -1226,16 +1472,19 @@
                     const history = MockDB.getHistory(activeStudent.id);
                     
                     const rows = history.map(h => {
-                        const date = new Date(h.date).toLocaleDateString('pt-BR');
-                        const time = new Date(h.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                        const date = formatDate(h.date);
+                        const time = formatTime(h.date);
                         const obs = h.observations ? `<i class="fa-solid fa-comment-dots text-blue-400" title="${h.observations}"></i>` : '-';
-                        
+                        const isPresencial = h.type === 'presencial';
+                        const rowClass = isPresencial ? 'presence-row' : '';
+                        const badgeHTML = isPresencial ? '<span class="presence-badge">PRESENCIAL</span>' : `<span class="badge ${h.pse > 7 ? 'badge-warning' : 'badge-active'}">PSE ${h.pse}</span>`;
+
                         return `
-                        <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition group">
+                        <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition group ${rowClass}">
                             <td class="p-3 text-white">${date} <span class="text-xs text-slate-500">${time}</span></td>
                             <td class="p-3 text-blue-400 font-bold">Treino ${h.day}</td>
                             <td class="p-3 text-slate-300 text-center">${h.duration} min</td>
-                            <td class="p-3 text-center"><span class="badge ${h.pse > 7 ? 'badge-warning' : 'badge-active'}">PSE ${h.pse}</span></td>
+                            <td class="p-3 text-center">${badgeHTML}</td>
                             <td class="p-3 text-center">${obs}</td>
                             <td class="p-3 text-right text-white font-mono">${h.internalLoad}</td>
                             <td class="p-3 text-right">
@@ -1293,7 +1542,6 @@
                     const exercises = fullPrescription.filter(ex => (ex.day || 'A') === App.state.currentDay);
                     const tabsHTML = tabs.map(t => `<div onclick="App.Actions.switchDay('${t}')" class="workout-tab ${App.state.currentDay === t ? 'active' : ''}">Treino ${t}</div>`).join('');
                     
-                    // --- ATUALIZADO: Botão Salvar, Layout da Tabela e NOVO EDITOR RICO ---
                     container.innerHTML = `
                     <div class="glass-panel p-4 mb-4 rounded-xl border border-slate-700">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
@@ -1310,8 +1558,11 @@
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <button id="btn-manual-save" onclick="App.Actions.saveWorkoutManual()" class="btn-action text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all flex items-center gap-2"><i class="fa-solid fa-save"></i> Salvar Alterações</button>
-                                <button onclick="App.Actions.addQuickRow()" class="btn-action text-xs bg-blue-600 hover:bg-blue-500 flex items-center gap-2"><i class="fa-solid fa-plus"></i> Add Exercício (${App.state.currentDay})</button>
+                                <!-- NOVO: BOTÃO REGISTRAR PRESENCIAL -->
+                                <button onclick="App.Actions.openPresenceModal()" class="btn-action text-xs bg-yellow-600/80 hover:bg-yellow-600 flex items-center gap-2 border border-yellow-500/30 text-yellow-100"><i class="fa-solid fa-person-chalkboard"></i> Presencial</button>
+                                
+                                <button id="btn-manual-save" onclick="App.Actions.saveWorkoutManual()" class="btn-action text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all flex items-center gap-2"><i class="fa-solid fa-save"></i> Salvar</button>
+                                <button onclick="App.Actions.addQuickRow()" class="btn-action text-xs bg-blue-600 hover:bg-blue-500 flex items-center gap-2"><i class="fa-solid fa-plus"></i> Add</button>
                             </div>
                         </div>
                         <div class="flex border-b border-slate-700 mt-2">${tabsHTML}</div>
@@ -1346,12 +1597,10 @@
                     `;
                 },
 
-                // --- FLUXO DE LOGIN SEGURO DO ALUNO ---
                 renderStudentLogin: (container, filter = '') => {
                     const students = MockDB.getStudents();
                     const filtered = students.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
                     
-                    // Se o filtro estiver vazio, não mostra nada (Privacidade total) ou mostra mensagem
                     let contentHTML = '';
                     
                     if (filter.length === 0) {
@@ -1364,7 +1613,6 @@
                     } else if (filtered.length === 0) {
                         contentHTML = `<p class="col-span-full text-center text-slate-500 italic mt-8">Aluno não encontrado.</p>`;
                     } else {
-                        // Mostra apenas os nomes que batem com a busca
                         contentHTML = `<div class="grid grid-cols-1 gap-3 w-full max-w-sm px-4 mt-4">
                             ${filtered.map(s => `
                                 <div onclick="App.Actions.promptStudentPassword(${s.id})" class="glass-panel p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all border border-slate-700">
@@ -1431,7 +1679,6 @@
                         }
                     });
 
-                    // Gera o HTML dos contadores (Saldo)
                     const splitMap = {
                         'Fullbody': ['A'],
                         'Fullbody AB': ['A','B'],
@@ -1495,11 +1742,8 @@
                     if (!activeStudent) return App.navigate('student_login');
                     const day = App.state.workoutDayToExecute;
                     
-                    // Cálculo da Semana Atual (Periodização)
-                    // Conta quantos treinos desse TIPO (ex: 'A') o aluno já fez
                     const history = MockDB.getHistory(activeStudent.id);
                     const completedSessions = history.filter(h => h.day === day).length;
-                    // Ciclo de 4 semanas (0, 1, 2, 3)
                     const currentWeekIndex = completedSessions % 4;
                     const weekNames = ['Base', 'Acúmulo', 'Choque', 'Deload'];
                     const currentWeekName = weekNames[currentWeekIndex];
@@ -1518,9 +1762,8 @@
                         </div>
                         
                         ${exercises.length > 0 ? exercises.map((ex, idx) => {
-                            // Pega os dados da semana correta ou fallback para semana 1 se der erro
                             const weekData = ex.weeks[currentWeekIndex] || ex.weeks[0];
-                            const sets = parseInt(weekData.s) || 1; // Garante pelo menos 1 set para renderizar
+                            const sets = parseInt(weekData.s) || 1; 
                             
                             return `
                             <div class="glass-panel p-5 rounded-xl border-l-4 border-l-blue-500 mb-4 animate-fade-in" style="animation-delay: ${idx * 50}ms">
@@ -1536,7 +1779,6 @@
                                     <div>Feito</div>
                                 </div>
                                 <div class="space-y-2">
-                                    <!-- Renderiza as séries baseadas no número definido na semana -->
                                     ${Array.from({length: sets}).map((_, i) => `
                                     <div class="grid grid-cols-4 gap-2 items-center bg-slate-800/50 p-2 rounded">
                                         <div class="text-white font-bold">${i + 1}</div>
