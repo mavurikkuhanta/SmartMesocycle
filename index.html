@@ -1,0 +1,1989 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMesocycle v29.3 | Secure & Full View</title>
+    
+    <!-- Design System: Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Analytics: Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Ícones: FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tipografia: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' }, scientific: { blue: '#3b82f6', green: '#10b981', red: '#ef4444', purple: '#8b5cf6' } },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slow-pulse': 'slowPulse 4s infinite ease-in-out',
+                        'float': 'float 4s ease-in-out infinite',
+                        'mesh': 'mesh 8s infinite alternate ease-in-out',
+                        'pulse-green': 'pulseGreen 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        float: { '0%, 100%': { transform: 'translate(0,0) scale(1)' }, '50%': { transform: 'translateY(-12px) scale(1.02)' } },
+                        mesh: { '0%': { transform: 'translate(0,0) scale(1)', opacity: 0.2 }, '100%': { transform: 'translate(10%, 5%) scale(1.1)', opacity: 0.4 } },
+                        slowPulse: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.6 } },
+                        pulseGreen: { '0%, 100%': { borderColor: 'transparent' }, '50%': { borderColor: '#10b981' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        #cloud-loader { transition: opacity 1s ease-in-out, visibility 1s; }
+        #cloud-loader.hidden-fade { opacity: 0; visibility: hidden; }
+        .glow-blob { position: absolute; width: 400px; height: 400px; border-radius: 50%; filter: blur(100px); z-index: 0; pointer-events: none; }
+
+        /* Cores da Logo Original Corel */
+        .fil4 {fill:#1A4FD3;fill-rule:nonzero}
+        .fil0 {fill:#2C9BFF;fill-rule:nonzero}
+        .fil3 {fill:#2E3192;fill-rule:nonzero}
+        .fil2 {fill:#552F91;fill-rule:nonzero}
+        .fil1 {fill:#7E3DFC;fill-rule:nonzero}
+
+        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        
+        /* Utilitários de Interface Otimizados */
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .input-sci { background-color: #0f172a; border: 1px solid #334155; color: white; padding: 0.5rem; border-radius: 0.375rem; width: 100%; transition: all 0.2s; font-size: 0.875rem; }
+        .input-sci:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        
+        /* Inputs da Planilha */
+        .sheet-input { background: transparent; border: 1px solid transparent; color: white; width: 100%; text-align: center; padding: 4px 2px; font-size: 0.75rem; border-radius: 2px; transition: border-color 0.3s; }
+        .sheet-input:hover { background: #1e293b; border-color: #475569; }
+        .sheet-input:focus { background: #0f172a; border-color: #3b82f6; outline: none; }
+        .sheet-input-text { text-align: left; padding-left: 8px; font-size: 0.85rem; }
+        
+        .sheet-cell { border-right: 1px solid #334155; border-bottom: 1px solid #334155; padding: 0; }
+        .sheet-header { padding: 8px; border-bottom: 1px solid #334155; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .saved-pulse { animation: pulseGreen 0.5s; border: 1px solid #10b981 !important; }
+
+        .btn-action { background-color: #3b82f6; color: white; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.375rem; transition: 0.2s; }
+        .btn-action:hover { background-color: #2563eb; transform: translateY(-1px); }
+        
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 50; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+
+        /* Navegação Lateral */
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #94a3b8; transition: all 0.2s; border: 1px solid transparent; margin-bottom: 0.5rem; }
+        .nav-item:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background-color: #1e293b; color: #3b82f6; border: 1px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); font-weight: 600; }
+
+        /* Tabs de Treino */
+        .workout-tab { padding: 0.5rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; color: #94a3b8; font-weight: 500; transition: all 0.2s; }
+        .workout-tab:hover { color: #e2e8f0; }
+        .workout-tab.active { border-bottom-color: #3b82f6; color: #3b82f6; font-weight: 700; }
+
+        /* Checkbox Customizado */
+        .custom-checkbox { appearance: none; background-color: #1e293b; margin: 0; font: inherit; color: currentColor; width: 1.5em; height: 1.5em; border: 1px solid #475569; border-radius: 0.25em; display: grid; place-content: center; cursor: pointer; transition: all 0.2s; }
+        .custom-checkbox::before { content: ""; width: 0.85em; height: 0.85em; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em white; transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox:checked { background-color: #10b981; border-color: #10b981; }
+        .custom-checkbox:checked::before { transform: scale(1); }
+
+        /* Escalas Coloridas (PSR, PSE, EVA) */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -6px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; border-radius: 2px; }
+        
+        .slider-psr::-webkit-slider-runnable-track { background: linear-gradient(to right, #ef4444 0%, #eab308 50%, #22c55e 100%); }
+        .slider-eva::-webkit-slider-runnable-track { background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%); }
+        .slider-pse::-webkit-slider-runnable-track { background: linear-gradient(to right, #3b82f6 0%, #22c55e 25%, #eab308 50%, #f97316 75%, #a855f7 100%); }
+
+        /* Body Diagram Styles - CLEAN & SIMPLE */
+        .diagram-label-box { fill: #1e293b; stroke: #475569; stroke-width: 1; cursor: pointer; transition: all 0.2s; rx: 4; }
+        .diagram-label-text { fill: #94a3b8; font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 500; pointer-events: none; text-anchor: middle; alignment-baseline: middle; }
+        .diagram-line { stroke: #475569; stroke-width: 1; opacity: 0.5; pointer-events: none; }
+        
+        /* ESTADO SELECIONADO: AZUL CLEAN */
+        .pain-selected .diagram-label-box { 
+            fill: #3b82f6; /* Fundo Azul */
+            stroke: #2563eb; /* Borda Azul Escura */
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4)); /* Brilho suave */
+        }
+        .pain-selected .diagram-label-text { 
+            fill: #ffffff; /* Texto Branco */
+            font-weight: 700; 
+        }
+        .pain-selected .diagram-line { 
+            stroke: #3b82f6; /* Linha Azul */
+            opacity: 1; 
+            stroke-width: 1.5;
+        }
+        
+        .body-silhouette { fill: #334155; stroke: #1e293b; stroke-width: 1; opacity: 0.5; }
+
+        /* ESTILOS DO EDITOR RICO */
+        .rich-editor-container { border: 1px solid #334155; border-radius: 0.5rem; overflow: hidden; background: #0f172a; }
+        .rich-toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+        .rich-btn { background: #334155; color: #cbd5e1; border: none; border-radius: 0.25em; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; }
+        .rich-btn:hover { background: #475569; color: white; }
+        .rich-content { min-height: 150px; padding: 1rem; color: white; outline: none; resize: vertical; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; }
+        .rich-content table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; border: 1px solid #475569; }
+        .rich-content th, .rich-content td { border: 1px solid #475569; padding: 0.5rem; text-align: left; }
+        .rich-content th { background-color: #1e293b; font-weight: bold; }
+        
+        /* Renderização no Lado do Aluno */
+        .message-render table { border-collapse: collapse; width: 100%; margin-top: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.2); }
+        .message-render th, .message-render td { border: 1px solid rgba(255,255,255,0.2); padding: 6px; font-size: 0.85rem; }
+        .message-render th { background-color: rgba(255,255,255,0.1); }
+        .message-render ul { list-style-type: disc; margin-left: 1.5rem; }
+        .message-render ol { list-style-type: decimal; margin-left: 1.5rem; }
+        
+        /* Tamanhos de Fonte Customizados na Renderização */
+        .message-render font[size="1"] { font-size: 0.6rem; }
+        .message-render font[size="2"] { font-size: 0.8rem; }
+        .message-render font[size="3"] { font-size: 1rem; }
+        .message-render font[size="4"] { font-size: 1.25rem; }
+        .message-render font[size="5"] { font-size: 1.5rem; }
+        .message-render font[size="6"] { font-size: 2rem; }
+        .message-render font[size="7"] { font-size: 3rem; }
+
+        /* Calendário */
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 6px; 
+            text-align: center; 
+            width: 100%;
+        }
+        .calendar-day { 
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px; 
+            font-size: 0.75rem; 
+            color: #64748b; 
+            border-radius: 6px; 
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        .calendar-day.active { 
+            background-color: rgba(16, 185, 129, 0.2); 
+            color: #34d399; 
+            font-weight: bold; 
+            border: 1px solid rgba(16, 185, 129, 0.3); 
+        }
+        .calendar-day.today { 
+            border: 1px solid #3b82f6; 
+            color: #e2e8f0;
+        }
+
+        /* PAIN TAGS - NOVO SISTEMA */
+        .pain-tag {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 999px;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            text-align: center;
+        }
+        .pain-tag:hover {
+            background-color: #334155;
+            color: white;
+        }
+        .pain-tag.selected {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-color: #ef4444;
+            font-weight: 700;
+        }
+
+        /* Scrollbar e Badges */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        
+        .badge { padding: 2px 8px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-warning { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .badge-inactive { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+        
+        /* NOVO: Estilo para linha de atendimento presencial */
+        .presence-row { background-color: rgba(234, 179, 8, 0.05); } 
+        .presence-badge { background-color: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- NEW Loading Screen (Splash Screen) -->
+    <div id="cloud-loader" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+      <div class="glow-blob bg-blue-600/10 top-[10%] -left-[10%] animate-mesh"></div>
+      <div class="glow-blob bg-purple-600/10 bottom-[20%] -right-[10%] animate-mesh [animation-delay:-4s]"></div>
+
+      <div class="relative z-10 flex flex-col items-center">
+          <div class="relative mb-8 animate-float">
+              <div class="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full scale-150 animate-slow-pulse"></div>
+              <svg class="w-40 h-40 md:w-52 md:h-52 drop-shadow-[0_0_25px_rgba(37,99,235,0.3)] relative z-20" viewBox="0 0 5926.66 5926.66" xmlns="http://www.w3.org/2000/svg">
+                  <g id="Layer_x0020_1">
+                      <path class="fil0" d="M3530.09 2003.75c-352.17,-217.14 -796.52,-228.89 -1193.17,-19.2 -263.2,139.15 -428.25,353.49 -498.48,642.8 -53.16,219.02 20.14,585.81 382.76,662.27 207.58,32.78 411.58,-10.21 488.9,-80.63 -416.3,19.56 -699.79,-263.1 -633.15,-668.58 116.87,-540.52 824.03,-803.84 1429.18,-514.45 33.82,16.17 67.33,33.97 100.39,53.63 98.36,71.01 185.04,147.99 257.42,232.29 0.03,0.01 0.05,0.01 0.08,0.01 -95.52,-128.14 -208.93,-231.06 -333.93,-308.14z"/>
+                      <path class="fil1" d="M3297.3 2324.58c-38.67,13.54 -75.89,30.44 -111.82,51.07 -171.39,98.46 -280.09,276.19 -304.58,472.32 -18.48,148.04 -76.34,273.98 -170.8,361.02 67.79,-3.2 139.08,-14.38 212.96,-34.36 198.27,-51.97 404.68,-19.63 620.9,114.49 -128,-186.52 -333.65,-406.55 -306.61,-725.27 7.55,-88.99 29.96,-168.84 59.95,-239.27z"/>
+                      <path class="fil2" d="M3863.94 2311.89c-221.72,-41.05 -406.64,-43.34 -566.64,12.69 -29.99,70.43 -52.4,150.28 -59.95,239.27 -27.04,318.72 178.61,538.75 306.61,725.27 54.48,33.79 109.56,73.93 165.3,120.93 177.82,157.64 278.68,103.5 334.44,-74.75 128.71,-437.68 41.98,-765.1 -179.76,-1023.41z"/>
+                      <path class="fil3" d="M3506.13 2025.96c-63.84,61.25 -150.66,161.99 -208.83,298.62 160,-56.03 344.92,-53.74 566.64,-12.69 -72.38,-84.31 -159.06,-161.29 -257.42,-232.3 -33.06,-19.67 -66.57,-37.46 -100.39,-53.63z"/>
+                      <path class="fil4" d="M3185.48 2375.65c35.93,-20.63 73.16,-37.53 111.82,-51.07 58.17,-136.63 144.99,-237.37 208.83,-298.62 -605.16,-289.4 -1312.31,-26.07 -1429.18,514.45 -66.64,405.48 216.85,688.14 633.15,668.57 94.46,-87.03 152.33,-212.97 170.8,-361.01 24.49,-196.13 133.19,-373.86 304.58,-472.32z"/>
+                      <path class="fil4" d="M3713.04 3707.11l-333.94 -192.8c-92.36,-53.33 -207.83,13.34 -207.83,120l0 319.71c0,106.66 115.47,173.33 207.83,119.99l333.94 -192.79c67.01,-38.69 67.01,-135.42 0,-174.11z"/>
+                  </g>
+              </svg>
+              <div class="absolute -inset-1 border-t border-blue-500/40 rounded-full animate-spin [animation-duration:12s]"></div>
+          </div>
+
+          <div class="space-y-1">
+              <h1 class="text-white font-black text-3xl md:text-4xl tracking-tighter">Smart<span class="text-blue-500">Mesocycle</span></h1>
+              <p class="text-blue-400/90 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] animate-pulse">Um produto de @pensandooef</p>
+              <div class="pt-10">
+                  <p class="text-slate-500 text-[9px] uppercase tracking-[0.4em] font-black" id="loading-status-text">Sincronizando registros da nuvem...</p>
+                  <div class="flex justify-center gap-1.5 mt-2">
+                      <span class="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></span>
+                      <span class="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                      <span class="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="absolute bottom-0 left-0 w-full h-[2px] bg-slate-900/50">
+          <div id="loading-progress-bar" class="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 w-0 transition-all ease-linear shadow-[0_0_10px_rgba(37,99,235,0.3)]" style="transition-duration: 6000ms;"></div>
+      </div>
+    </div>
+
+    <!-- Top Bar -->
+    <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 z-20 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 w-8 h-8 rounded flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-users-gear text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v29.3</span></h1>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span id="user-role-display" class="text-xs text-slate-400 font-bold uppercase hidden md:block"></span>
+            
+            <!-- NOVO BOTÃO DE BACKUP -->
+            <button onclick="App.Actions.downloadBackup()" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-blue-400 transition-all border border-slate-700 hidden" id="backup-btn" title="Baixar Backup (JSON)">
+                <i class="fa-solid fa-cloud-download-alt mr-1"></i> Backup
+            </button>
+            
+            <button onclick="App.Actions.logout()" class="px-3 py-1.5 rounded-md text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all border border-transparent hover:border-red-500/20" title="Sair do Sistema">
+                <i class="fa-solid fa-power-off mr-1"></i> Sair
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between transition-all duration-300 transform hidden">
+            <nav class="p-4">
+                <div class="text-xs font-bold text-slate-500 uppercase px-3 mb-2 mt-2">Gestão</div>
+                <div onclick="App.navigate('dashboard')" class="nav-item active" id="nav-dashboard">
+                    <i class="fa-solid fa-users w-5 mr-2"></i> Meus Alunos
+                </div>
+                <div onclick="App.navigate('prescription')" class="nav-item" id="nav-prescription">
+                    <i class="fa-solid fa-dumbbell w-5 mr-2"></i> Prescrição
+                </div>
+                <div onclick="App.navigate('reports')" class="nav-item" id="nav-reports">
+                    <i class="fa-solid fa-file-contract w-5 mr-2"></i> Relatórios
+                </div>
+            </nav>
+            
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">PR</div>
+                    <div>
+                        <p class="text-xs font-bold text-white">Prof. Regente</p>
+                        <p class="text-[10px] text-green-400">Autenticado</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 bg-slate-950 relative overflow-y-auto overflow-x-hidden">
+            <div id="app-content" class="p-6 max-w-full mx-auto min-h-full pb-20">
+                <!-- Conteúdo injetado via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Timer Flutuante -->
+    <div id="float-timer" class="fixed bottom-4 right-4 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl p-4 hidden z-50 animate-fade-in w-52 flex flex-col gap-2">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+            <span class="text-xs font-bold text-blue-400 uppercase flex items-center gap-1"><i class="fa-solid fa-stopwatch"></i> Descanso</span>
+            <button onclick="App.Actions.stopTimer()" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="text-4xl font-mono font-bold text-white text-center py-2" id="timer-display">00:00</div>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="App.Actions.startTimer(30)" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-1.5 rounded">30s</button>
+            <button onclick="App.Actions.startTimer(60)" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-1.5 rounded">60s</button>
+            <button onclick="App.Actions.startTimer(90)" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-1.5 rounded">90s</button>
+            <button onclick="App.Actions.startTimer(120)" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-1.5 rounded">120s</button>
+        </div>
+        <div class="flex gap-2 mt-1">
+            <button onclick="App.Actions.adjustTimer(-10)" class="flex-1 bg-red-900/30 text-red-400 hover:bg-red-900/50 text-xs py-1 rounded">-10s</button>
+            <button onclick="App.Actions.adjustTimer(+10)" class="flex-1 bg-green-900/30 text-green-400 hover:bg-green-900/50 text-xs py-1 rounded">+10s</button>
+        </div>
+    </div>
+
+    <!-- Modal de LOGIN DO PROFESSOR (COM AUTH REAL) -->
+    <div id="coach-login-modal" class="modal-overlay">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-blue-500/30 bg-slate-900 flex flex-col items-center animate-slide-up">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-blue-500/40">
+                <i class="fa-solid fa-lock text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Acesso Treinador</h3>
+            <p class="text-slate-400 text-sm mb-6 text-center">Digite suas credenciais de administrador.</p>
+            
+            <!-- CAMPO DE EMAIL (NOVO) -->
+            <input type="email" id="coach-email" class="input-sci text-center text-sm mb-3" placeholder="admin@smartmesocycle.com">
+            
+            <input type="password" id="coach-password" class="input-sci text-center text-lg tracking-widest mb-4" placeholder="Senha">
+            
+            <button onclick="App.Actions.verifyCoachLogin()" class="w-full py-3 rounded bg-blue-600 text-white hover:bg-blue-500 font-bold transition shadow-lg">Entrar</button>
+            <button onclick="App.Actions.logout()" class="mt-4 text-xs text-slate-500 hover:text-slate-300">Voltar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Iniciar Treino -->
+    <div id="start-workout-confirm-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-green-500/30 bg-slate-900 animate-slide-up">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-play text-green-500"></i> Iniciar Sessão
+            </h3>
+            <p class="text-slate-300 text-sm mb-6">Pronto para começar? Vamos iniciar o cronômetro para o treino de hoje.</p>
+            <div class="flex gap-3">
+                <button onclick="App.Actions.closeModal('start-workout-confirm-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.confirmStartWorkout()" class="flex-1 py-2 rounded bg-green-600 text-white hover:bg-green-500 font-bold transition">Sim, Vamos!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Finalizar Treino (ATUALIZADO) -->
+    <div id="finish-workout-confirm-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-blue-500/30 bg-slate-900 animate-slide-up">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-flag-checkered text-blue-500"></i> Finalizar Sessão
+            </h3>
+            <p class="text-slate-300 text-sm mb-4">Confirme os dados antes de salvar:</p>
+            
+            <div class="mb-6 space-y-3">
+                 <!-- NOVO: Campo de Duração Manual -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Duração Real (min)</label>
+                    <input type="number" id="manual-workout-duration" class="input-sci text-center font-bold text-lg border-blue-500/30" value="0">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="App.Actions.closeModal('finish-workout-confirm-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Voltar ao Treino</button>
+                <button onclick="App.Actions.confirmFinishWorkout()" class="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-500 font-bold transition">Confirmar e Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Registrar Presencial -->
+    <div id="register-presence-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-yellow-500/30 bg-slate-900">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-person-chalkboard text-yellow-500"></i> Registro Presencial
+            </h3>
+            <p class="text-slate-400 text-xs mb-4">Você está registrando que acompanhou este treino pessoalmente.</p>
+            
+            <div class="space-y-4">
+                 <div>
+                    <label class="text-xs text-slate-400 block mb-1">Qual treino foi feito?</label>
+                    <select id="presence-workout-day" class="input-sci bg-slate-800">
+                        <option value="A">Treino A</option>
+                        <option value="B">Treino B</option>
+                        <option value="C">Treino C</option>
+                        <option value="D">Treino D</option>
+                        <option value="E">Treino E</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Duração (min)</label>
+                    <input type="number" id="presence-duration" class="input-sci" value="60">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">PSE Observada (0-10)</label>
+                    <input type="number" id="presence-pse" class="input-sci" value="8" min="0" max="10">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Notas do Professor</label>
+                    <textarea id="presence-notes" class="input-sci h-20 resize-none" placeholder="Ex: Técnica melhorou no agachamento."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="App.Actions.closeModal('register-presence-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.confirmPresenceWorkout()" class="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 font-bold transition">Salvar Registro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Aluno (Com Senha) -->
+    <div id="add-student-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-slate-600 bg-slate-900">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus text-blue-500"></i> Novo Aluno</h3>
+            <div class="space-y-4">
+                <div><label class="text-xs text-slate-400 block mb-1">Nome Completo</label><input type="text" id="student-name" class="input-sci" placeholder="Ex: Carlos Silva"></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Objetivo Principal</label><select id="student-goal" class="input-sci"><option value="Hipertrofia">Hipertrofia</option><option value="Emagrecimento">Emagrecimento</option><option value="Força Pura">Força Pura</option><option value="Condicionamento">Condicionamento</option><option value="Reabilitação">Reabilitação</option><option value="Performance Esportiva">Performance Esportiva</option></select></div>
+                <div><label class="text-xs text-blue-400 font-bold block mb-1">Divisão de Treino (Split)</label><select id="student-split" class="input-sci border-blue-500/30"><option value="Fullbody">Fullbody (Corpo Inteiro)</option><option value="Fullbody AB">Fullbody AB</option><option value="ABC">ABC</option><option value="ABCD">ABCD</option><option value="ABCDE">ABCDE</option></select></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Status Inicial</label><select id="student-status" class="input-sci"><option value="active">Ativo</option><option value="warning">Em Observação</option></select></div>
+                <!-- NOVO: Campo de Senha -->
+                <div><label class="text-xs text-purple-400 font-bold block mb-1">Senha de Acesso (PIN)</label><input type="text" id="student-password" class="input-sci border-purple-500/30 text-center tracking-widest font-bold" value="1234" placeholder="1234"></div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="App.Actions.closeModal('add-student-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.saveNewStudent()" class="flex-1 py-2 rounded bg-green-600 text-white hover:bg-green-500 font-bold transition">Matricular</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Editar Aluno -->
+    <div id="edit-student-profile-modal" class="modal-overlay">
+        <div class="glass-panel p-6 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-slate-600 bg-slate-900">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-pencil text-yellow-500"></i> Editar Aluno</h3>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-student-id">
+                <div><label class="text-xs text-slate-400 block mb-1">Nome Completo</label><input type="text" id="edit-student-name" class="input-sci" placeholder="Ex: Carlos Silva"></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Objetivo Principal</label><select id="edit-student-goal" class="input-sci"><option value="Hipertrofia">Hipertrofia</option><option value="Emagrecimento">Emagrecimento</option><option value="Força Pura">Força Pura</option><option value="Condicionamento">Condicionamento</option><option value="Reabilitação">Reabilitação</option><option value="Performance Esportiva">Performance Esportiva</option></select></div>
+                <div><label class="text-xs text-slate-400 block mb-1">Status</label><select id="edit-student-status" class="input-sci"><option value="active">Ativo</option><option value="warning">Em Observação</option><option value="inactive">Inativo</option></select></div>
+                <!-- NOVO: Campo de Senha na Edição -->
+                <div><label class="text-xs text-purple-400 font-bold block mb-1">Senha de Acesso (PIN)</label><input type="text" id="edit-student-password" class="input-sci border-purple-500/30 text-center tracking-widest font-bold" placeholder="1234"></div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="App.Actions.closeModal('edit-student-profile-modal')" class="flex-1 py-2 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Cancelar</button>
+                <button onclick="App.Actions.saveEditedStudent()" class="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 font-bold transition">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Login do Aluno (PIN) -->
+    <div id="student-login-modal" class="modal-overlay">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-sm mx-4 shadow-2xl border border-green-500/30 bg-slate-900 flex flex-col items-center animate-slide-up">
+            <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/40">
+                <i class="fa-solid fa-user-lock text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2" id="login-student-name-display">Aluno</h3>
+            <p class="text-slate-400 text-sm mb-6 text-center">Digite sua senha de acesso pessoal.</p>
+            <input type="password" id="login-student-password" class="input-sci text-center text-lg tracking-widest mb-4" placeholder="••••">
+            <input type="hidden" id="login-student-id-target">
+            <button onclick="App.Actions.verifyStudentLogin()" class="w-full py-3 rounded bg-green-600 text-white hover:bg-green-500 font-bold transition shadow-lg">Entrar</button>
+            <button onclick="App.Actions.closeModal('student-login-modal')" class="mt-4 text-xs text-slate-500 hover:text-slate-300">Voltar</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT MODULES - FIREBASE & APP LOGIC -->
+    <script type="module">
+        const hideSplashScreen = () => {
+            const loader = document.getElementById('cloud-loader');
+            if (loader) {
+                loader.classList.add('hidden-fade');
+                setTimeout(() => loader.style.display = 'none', 1000);
+            }
+        };
+
+        // 1. IMPORTAÇÕES OFICIAIS (Auth + Firestore)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // NOVO: Importamos as funções de Segurança (Auth) - Incluindo signInAnonymously
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // 2. CONFIGURAÇÃO (Sua chave original protegida)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBpM3fImWbN0Zjes8NNfD3Tq95mebt1e40", 
+            authDomain: "smartmesocycle.firebaseapp.com",
+            projectId: "smartmesocycle",
+            storageBucket: "smartmesocycle.firebasestorage.app",
+            messagingSenderId: "623146213612",
+            appId: "1:623146213612:web:5f66726ce68aaa4b7645c9",
+            measurementId: "G-X182PZN8QX"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app); // Inicializa a Segurança
+
+        // --- ADAPTADOR DE BANCO DE DADOS HÍBRIDO E SEGURO ---
+        const MockDB = {
+            data: {
+                students: [],
+                prescription: [],
+                workout_history: []
+            },
+            
+            // Função auxiliar para garantir a estrutura de 4 semanas
+            _ensureWeeksStructure: (ex) => {
+                if (!ex.weeks || !Array.isArray(ex.weeks)) {
+                    ex.weeks = [];
+                }
+                // Garante que existam 4 objetos de semana
+                for (let i = 0; i < 4; i++) {
+                    if (!ex.weeks[i]) {
+                        ex.weeks[i] = { s: '', r: '', w: '' };
+                    }
+                }
+                return ex;
+            },
+            
+            // Função de Inicialização Segura (O Porteiro)
+            initCloud: async (isAdmin = false) => {
+                try {
+                    document.getElementById('loading-status-text').innerText = "Conectando...";
+                    
+                    // 1. Sempre buscamos a lista de alunos (Nomes/IDs/Senhas) para o login funcionar
+                    // A regra do Firestore permite 'read' em 'students' se for pública ou se logado.
+                    const sSnap = await getDocs(collection(db, "students"));
+                    MockDB.data.students = sSnap.docs.map(d => {
+                        const s = d.data();
+                        if (!s.password) s.password = '1234';
+                        return {...s, fireId: d.id};
+                    }); 
+                    
+                    // 2. Lógica de Segurança
+                    if (isAdmin) {
+                        // Se for Treinador: Baixa TUDO
+                        document.getElementById('loading-status-text').innerText = "Baixando Carteira...";
+                        
+                        const pSnap = await getDocs(collection(db, "prescription"));
+                        MockDB.data.prescription = pSnap.docs.map(d => {
+                            let ex = {...d.data(), fireId: d.id};
+                            return MockDB._ensureWeeksStructure(ex); 
+                        }).sort((a,b) => a.id - b.id);
+
+                        const hSnap = await getDocs(collection(db, "workout_history"));
+                        MockDB.data.workout_history = hSnap.docs.map(d => ({...d.data(), fireId: d.id}));
+                    } else {
+                        // Se for Aluno/Visitante: NÃO baixa treinos ainda (Cofre Fechado)
+                        console.log("Modo Seguro: Dados sensíveis não carregados.");
+                        MockDB.data.prescription = [];
+                        MockDB.data.workout_history = [];
+                    }
+
+                    return true;
+                } catch (e) {
+                    console.error("Erro Firebase Detalhado:", e);
+                    return false;
+                }
+            },
+
+            // --- CARREGAMENTO SOB DEMANDA (A Chave do Cofre) ---
+            loadStudentData: async (studentId) => {
+                try {
+                    document.getElementById('cloud-loader').classList.remove('hidden');
+                    document.getElementById('loading-status-text').innerText = "Baixando seu treino...";
+
+                    // Busca apenas prescrições deste aluno
+                    const qPresc = query(collection(db, "prescription"), where("studentId", "==", studentId));
+                    const pSnap = await getDocs(qPresc);
+                    MockDB.data.prescription = pSnap.docs.map(d => MockDB._ensureWeeksStructure({...d.data(), fireId: d.id})).sort((a,b) => a.id - b.id);
+
+                    // Busca apenas histórico deste aluno
+                    const qHist = query(collection(db, "workout_history"), where("studentId", "==", studentId));
+                    const hSnap = await getDocs(qHist);
+                    MockDB.data.workout_history = hSnap.docs.map(d => ({...d.data(), fireId: d.id}));
+
+                    document.getElementById('cloud-loader').classList.add('hidden');
+                    return true;
+                } catch(e) {
+                    console.error("Erro ao baixar dados:", e);
+                    alert("Erro ao carregar dados do aluno.");
+                    document.getElementById('cloud-loader').classList.add('hidden');
+                    return false;
+                }
+            },
+
+            // Sincronizadores (Background)
+            _syncAdd: async (col, item) => {
+                try {
+                    const docRef = await addDoc(collection(db, col), item);
+                    const local = MockDB.data[col].find(i => i.id === item.id);
+                    if(local) local.fireId = docRef.id;
+                } catch(e) { console.error("Erro sync add:", e); }
+            },
+            _syncUpdate: async (col, id, data) => {
+                const local = MockDB.data[col].find(i => i.id === id);
+                if(local && local.fireId) await updateDoc(doc(db, col, local.fireId), data);
+            },
+            _syncDelete: async (col, id) => {
+                const local = MockDB.data[col].find(i => i.id === id);
+                if(local && local.fireId) await deleteDoc(doc(db, col, local.fireId));
+            },
+
+            // MÉTODOS PÚBLICOS
+            getStudents: () => MockDB.data.students,
+            getStudentById: (id) => MockDB.data.students.find(s => s.id == id),
+            
+            addStudent: (student) => { 
+                const s = {...student, message: ''};
+                if(!s.password) s.password = '1234';
+                MockDB.data.students.push(s); 
+                MockDB._syncAdd('students', s); 
+            },
+
+            updateStudentProfile: (id, newData) => {
+                const idx = MockDB.data.students.findIndex(s => s.id == id);
+                if (idx !== -1) {
+                    const original = MockDB.data.students[idx];
+                    const updated = { ...original, ...newData };
+                    if (newData.name) {
+                        updated.img = newData.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                    }
+                    MockDB.data.students[idx] = updated;
+                    const { fireId, ...clean } = updated;
+                    MockDB._syncUpdate('students', id, clean);
+                }
+            },
+            
+            deleteStudent: (id) => {
+                MockDB._syncDelete('students', id);
+                MockDB.data.students = MockDB.data.students.filter(s => s.id != id);
+                const studentPrescriptions = MockDB.data.prescription.filter(p => p.studentId == id);
+                studentPrescriptions.forEach(p => MockDB._syncDelete('prescription', p.id));
+                MockDB.data.prescription = MockDB.data.prescription.filter(p => p.studentId != id);
+                const studentHistory = MockDB.data.workout_history.filter(h => h.studentId == id);
+                studentHistory.forEach(h => MockDB._syncDelete('workout_history', h.id));
+                MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.studentId != id);
+            },
+
+            updateStudentMessage: (id, msg) => {
+                const s = MockDB.data.students.find(s => s.id == id);
+                if (s) {
+                    s.message = msg;
+                    MockDB._syncUpdate('students', id, { message: msg });
+                }
+            },
+
+            duplicateStudent: (id) => {
+                const source = MockDB.data.students.find(s => s.id == id);
+                if (!source) return;
+                const newId = Date.now();
+                const newStudent = { ...source, id: newId, name: source.name + " (Cópia)", img: source.img, fireId: null };
+                MockDB.data.students.push(newStudent);
+                MockDB._syncAdd('students', newStudent);
+
+                const sourcePrescription = MockDB.data.prescription.filter(ex => ex.studentId == id);
+                sourcePrescription.forEach(ex => {
+                    let newEx = { ...ex, id: Date.now() + Math.random(), studentId: newId, fireId: null };
+                    newEx = MockDB._ensureWeeksStructure(newEx);
+                    MockDB.data.prescription.push(newEx);
+                    MockDB._syncAdd('prescription', newEx);
+                });
+            },
+
+            updateStudentSplit: (id, split) => {
+                const s = MockDB.data.students.find(s => s.id == id);
+                if (s) { 
+                    s.split = split; s.plan = `${split} - Base`; 
+                    MockDB._syncUpdate('students', id, { split: s.split, plan: s.plan });
+                }
+            },
+
+            getPrescription: (studentId) => {
+                if (!studentId) return [];
+                return MockDB.data.prescription.filter(ex => ex.studentId == studentId).sort((a,b) => a.id - b.id);
+            },
+            
+            addExerciseToPrescription: (exData) => { 
+                const newEx = { 
+                    ...exData, 
+                    weeks: exData.weeks || [
+                        { s: exData.sets || '', r: exData.reps || '', w: exData.load || '' }, 
+                        { s: '', r: '', w: '' }, 
+                        { s: '', r: '', w: '' }, 
+                        { s: '', r: '', w: '' }
+                    ] 
+                };
+                MockDB.data.prescription.push(newEx); 
+                MockDB._syncAdd('prescription', newEx);
+            },
+            
+            updateExercise: (id, exData) => {
+                const idx = MockDB.data.prescription.findIndex(e => e.id == id);
+                if (idx !== -1) {
+                    const original = MockDB.data.prescription[idx];
+                    let updated = { ...original, ...exData };
+                    updated = MockDB._ensureWeeksStructure(updated);
+                    MockDB.data.prescription[idx] = updated;
+                    const { fireId, ...clean } = updated;
+                    MockDB._syncUpdate('prescription', id, clean);
+                }
+            },
+            
+            deleteExercise: (id) => { 
+                MockDB._syncDelete('prescription', id);
+                MockDB.data.prescription = MockDB.data.prescription.filter(e => e.id != id); 
+            },
+            
+            getExerciseById: (id) => MockDB.data.prescription.find(e => e.id == id),
+            
+            saveWorkout: (data) => { 
+                data.id = Date.now(); 
+                MockDB.data.workout_history.push(data); 
+                MockDB._syncAdd('workout_history', data);
+                return true; 
+            },
+            
+            deleteWorkout: (id) => {
+                MockDB._syncDelete('workout_history', id);
+                MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.id !== id);
+            },
+            
+            getHistory: (studentId) => {
+                return MockDB.data.workout_history.filter(h => h.studentId == studentId).sort((a,b) => new Date(b.date) - new Date(a.date));
+            }
+        };
+
+        // --- APP HELPERS ---
+        const formatDate = (dateInput) => {
+            try {
+                if (dateInput && typeof dateInput.toDate === 'function') {
+                    return dateInput.toDate().toLocaleDateString('pt-BR');
+                }
+                return new Date(dateInput).toLocaleDateString('pt-BR');
+            } catch (e) {
+                return 'Data Inválida';
+            }
+        };
+
+        const formatTime = (dateInput) => {
+            try {
+                if (dateInput && typeof dateInput.toDate === 'function') {
+                    return dateInput.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                }
+                return new Date(dateInput).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return '--:--';
+            }
+        };
+
+
+        // --- APP CONTROLLER ---
+        const App = {
+            state: { 
+                role: null, currentView: 'landing', bodyView: 'front', 
+                workoutStartTime: null, timerInterval: null, restTimerInterval: null, 
+                timerSeconds: 0, editingId: null, painPoints: [], 
+                currentDay: 'A', activeStudentId: null, workoutDayToExecute: 'A' 
+            },
+            
+            init: async () => {
+                // --- MONITORAMENTO DE AUTH (ADMIN e ALUNO) ---
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        if (user.isAnonymous) {
+                            // É ALUNO: Não dá poderes de admin
+                            if (App.state.role !== 'student') {
+                                // Se recarregar a página e for anônimo, verifica sessão local ou sai
+                                if(!localStorage.getItem('smartMeso_studentState')) {
+                                    signOut(auth);
+                                }
+                            }
+                        } else {
+                            // É TREINADOR (Autenticado por Email)
+                            console.log("Admin Logado:", user.email);
+                            App.state.role = 'coach';
+                            await MockDB.initCloud(true); // Carrega tudo para o treinador
+
+                            if(App.state.currentView === 'landing') {
+                                document.getElementById('sidebar').classList.remove('hidden');
+                                document.getElementById('header-subtitle').innerText = "Modo Treinador";
+                                document.getElementById('user-role-display').innerText = "Treinador";
+                                document.getElementById('backup-btn').classList.remove('hidden');
+                                App.navigate('dashboard');
+                            }
+                        }
+                    } else {
+                        // Ninguém logado
+                        await MockDB.initCloud(false); // Baixa apenas lista de alunos (agora permitido pelas regras)
+                        
+                        if (App.state.role === 'coach') {
+                            App.Actions.logout(); 
+                        }
+                    }
+                });
+                
+                // --- RECUPERAÇÃO DE SESSÃO (PERSISTÊNCIA) ---
+                const savedState = localStorage.getItem('smartMeso_studentState');
+                if (savedState) {
+                    try {
+                        const parsed = JSON.parse(savedState);
+                        // Sessão válida por 3 horas
+                        if (Date.now() - parsed.timestamp < 10800000) { 
+                            App.state.activeStudentId = parsed.studentId;
+                            App.state.workoutDayToExecute = parsed.day;
+                            App.state.painPoints = parsed.pain || [];
+                            App.state.role = 'student';
+                            
+                            // IMPORTANTE: Baixa os dados do aluno ao restaurar
+                            await MockDB.loadStudentData(parsed.studentId);
+                            
+                            if(parsed.startTime) {
+                                App.state.workoutStartTime = new Date(parsed.startTime);
+                                App.navigate('student_workout');
+                            } else {
+                                App.navigate('student_checkin');
+                            }
+                        }
+                    } catch(e) { console.error("Erro restore:", e); }
+                } else if (!auth.currentUser) {
+                    App.navigate('landing');
+                }
+
+                // Animate progress bar
+                requestAnimationFrame(() => {
+                    const progressBar = document.getElementById('loading-progress-bar');
+                    if (progressBar) {
+                        progressBar.style.width = '100%';
+                    }
+                });
+                
+                // Isos garante que a tela saia após 6 segundos (6000ms)
+                setTimeout(hideSplashScreen, 6000);
+            },
+            
+            Actions: {
+                saveLocalState: () => {
+                    if (App.state.role === 'student' && App.state.activeStudentId) {
+                        const stateToSave = {
+                            studentId: App.state.activeStudentId,
+                            day: App.state.workoutDayToExecute,
+                            pain: App.state.painPoints,
+                            startTime: App.state.workoutStartTime ? App.state.workoutStartTime.getTime() : null,
+                            timestamp: Date.now()
+                        };
+                        localStorage.setItem('smartMeso_studentState', JSON.stringify(stateToSave));
+                    }
+                },
+                
+                clearLocalState: () => {
+                    localStorage.removeItem('smartMeso_studentState');
+                },
+
+                startCoachFlow: () => { document.getElementById('coach-login-modal').classList.add('active'); document.getElementById('coach-password').value = ''; document.getElementById('coach-password').focus(); },
+                
+                startStudentFlow: () => {
+                    App.state.role = 'student';
+                    App.Actions.clearLocalState();
+                    App.navigate('student_login');
+                },
+
+                verifyCoachLogin: () => {
+                    const email = document.getElementById('coach-email').value || "admin@smartmesocycle.com"; 
+                    const password = document.getElementById('coach-password').value;
+                    const btn = document.querySelector('#coach-login-modal button');
+                    
+                    if(!password) return alert("Digite a senha.");
+
+                    btn.innerText = "Verificando...";
+                    btn.disabled = true;
+
+                    signInWithEmailAndPassword(auth, email, password)
+                        .then((userCredential) => {
+                            document.getElementById('coach-login-modal').classList.remove('active');
+                        })
+                        .catch((error) => {
+                            console.error("Erro Auth:", error.code);
+                            alert("Erro ao entrar: " + error.message);
+                        })
+                        .finally(() => {
+                            btn.innerText = "Entrar";
+                            btn.disabled = false;
+                        });
+                },
+
+                logout: () => {
+                    signOut(auth).then(() => {
+                        App.state.role = null; 
+                        App.state.activeStudentId = null; 
+                        App.Actions.clearLocalState();
+                        document.getElementById('sidebar').classList.add('hidden');
+                        document.getElementById('coach-login-modal').classList.remove('active');
+                        document.getElementById('float-timer').classList.add('hidden');
+                        document.getElementById('backup-btn').classList.add('hidden');
+                        document.getElementById('user-role-display').innerText = "";
+                        App.navigate('landing');
+                    });
+                },
+                
+                downloadBackup: () => {
+                    const data = {
+                        students: MockDB.data.students,
+                        prescription: MockDB.data.prescription,
+                        history: MockDB.data.workout_history,
+                        date: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup_smartmesocycle_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                },
+
+                // CORREÇÃO: "Sair" do aluno agora faz logout real para limpar a sessão
+                goBackToLogin: () => { 
+                    signOut(auth).then(() => {
+                        App.state.activeStudentId = null; 
+                        App.Actions.clearLocalState(); 
+                        App.navigate('student_login'); 
+                    });
+                },
+                
+                goBackToCheckin: () => {
+                    if(App.state.timerInterval) clearInterval(App.state.timerInterval);
+                    App.state.workoutStartTime = null;
+                    App.Actions.saveLocalState();
+                    document.getElementById('float-timer').classList.add('hidden');
+                    App.navigate('student_checkin');
+                },
+                
+                filterStudents: (query) => { App.Views.renderStudentLogin(document.getElementById('app-content'), query); },
+                
+                promptStudentPassword: (id) => {
+                    const student = MockDB.getStudentById(id);
+                    if(!student) return;
+                    document.getElementById('login-student-name-display').innerText = student.name;
+                    document.getElementById('login-student-id-target').value = id;
+                    document.getElementById('login-student-password').value = '';
+                    document.getElementById('student-login-modal').classList.add('active');
+                    document.getElementById('login-student-password').focus();
+                },
+
+                // --- LOGIN DE ALUNO SEGURO (Lazy Loading + Auth Anônima) ---
+                verifyStudentLogin: async () => {
+                    const id = parseInt(document.getElementById('login-student-id-target').value);
+                    const password = document.getElementById('login-student-password').value;
+                    const student = MockDB.getStudentById(id);
+                    const btn = document.querySelector('#student-login-modal button.bg-green-600');
+
+                    if (student && student.password === password) {
+                        btn.innerText = "Autenticando...";
+                        btn.disabled = true;
+                        
+                        try {
+                            // 1. Login Anônimo no Firebase para obter "crachá"
+                            await signInAnonymously(auth);
+
+                            btn.innerText = "Baixando Treino...";
+                            
+                            // 2. Baixa os dados (agora permitidos pelas regras)
+                            const success = await MockDB.loadStudentData(id);
+                            
+                            if (success) {
+                                document.getElementById('student-login-modal').classList.remove('active');
+                                App.Actions.selectStudent(id); 
+                            } else {
+                                throw new Error("Falha ao baixar dados.");
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert("Erro de conexão segura. Tente novamente.\n" + e.message);
+                            signOut(auth); 
+                        } finally {
+                            btn.innerText = "Entrar";
+                            btn.disabled = false;
+                        }
+                    } else {
+                        alert("Senha incorreta. Tente novamente.");
+                        document.getElementById('login-student-password').value = '';
+                        document.getElementById('login-student-password').focus();
+                    }
+                },
+                
+                selectStudent: (id) => {
+                    App.state.activeStudentId = id; App.state.currentDay = 'A';
+                    if (App.state.role === 'student') { 
+                        App.navigate('student_checkin'); 
+                        App.Actions.saveLocalState();
+                    } else { App.navigate('prescription'); }
+                },
+
+                duplicateStudent: (id, event) => {
+                    event.stopPropagation(); 
+                    if(confirm("Deseja criar uma cópia deste aluno (template)?")) { MockDB.duplicateStudent(id); App.navigate('dashboard'); }
+                },
+                
+                deleteStudent: (id, event) => {
+                    event.stopPropagation();
+                    if(confirm("ATENÇÃO: Isso excluirá o aluno e TODO o histórico/prescrição dele.\n\nEssa ação não pode ser desfeita. Deseja continuar?")) {
+                        MockDB.deleteStudent(id);
+                        App.navigate('dashboard');
+                    }
+                },
+
+                openEditStudentModal: (id, event) => {
+                    event.stopPropagation();
+                    const student = MockDB.getStudentById(id);
+                    if (!student) return;
+                    document.getElementById('edit-student-id').value = student.id;
+                    document.getElementById('edit-student-name').value = student.name;
+                    document.getElementById('edit-student-goal').value = student.goal;
+                    document.getElementById('edit-student-status').value = student.status;
+                    document.getElementById('edit-student-password').value = student.password || ''; 
+                    document.getElementById('edit-student-profile-modal').classList.add('active');
+                },
+
+                saveEditedStudent: () => {
+                    const id = parseInt(document.getElementById('edit-student-id').value);
+                    const name = document.getElementById('edit-student-name').value;
+                    const goal = document.getElementById('edit-student-goal').value;
+                    const status = document.getElementById('edit-student-status').value;
+                    const password = document.getElementById('edit-student-password').value;
+
+                    if (!name) return alert("O nome não pode ficar vazio.");
+
+                    MockDB.updateStudentProfile(id, { name, goal, status, password });
+                    App.Actions.closeModal('edit-student-profile-modal');
+                    App.navigate('dashboard');
+                },
+
+                openPresenceModal: () => {
+                    if (!App.state.activeStudentId) return;
+                    document.getElementById('register-presence-modal').classList.add('active');
+                    document.getElementById('presence-notes').value = '';
+                },
+
+                confirmPresenceWorkout: () => {
+                    if (!App.state.activeStudentId) return;
+                    
+                    const day = document.getElementById('presence-workout-day').value;
+                    const duration = document.getElementById('presence-duration').value || 60;
+                    const pse = document.getElementById('presence-pse').value || 8;
+                    const notes = document.getElementById('presence-notes').value;
+
+                    const workoutData = { 
+                        date: new Date(), 
+                        studentId: App.state.activeStudentId, 
+                        day: day, 
+                        duration: duration, 
+                        pse: parseInt(pse), 
+                        observations: notes + " [PRESENCIAL]", 
+                        internalLoad: parseInt(pse) * duration, 
+                        pain: [], 
+                        type: 'presencial' 
+                    };
+                    
+                    MockDB.saveWorkout(workoutData);
+                    App.Actions.closeModal('register-presence-modal');
+                    alert("Treino presencial registrado com sucesso!");
+                },
+
+                saveStudentMessage: () => {
+                    const editor = document.getElementById('rich-text-editor');
+                    if(App.state.activeStudentId && editor) {
+                        MockDB.updateStudentMessage(App.state.activeStudentId, editor.innerHTML);
+                        editor.parentElement.classList.add('border-green-500');
+                        setTimeout(() => editor.parentElement.classList.remove('border-green-500'), 1000);
+                    }
+                },
+
+                handleBatchPaste: (event, id) => {
+                    const pasteData = (event.clipboardData || window.clipboardData).getData('text');
+                    
+                    if (!pasteData) return;
+
+                    if (pasteData.includes('\n') || pasteData.includes('\r')) {
+                         event.preventDefault(); 
+
+                        const lines = pasteData.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+                        
+                        if (lines.length === 0) return;
+
+                        const parseLineToExercise = (lineData, baseEx) => {
+                            let columns = lineData.split('\t');
+                            if (columns.length < 2 && lineData.includes(';')) columns = lineData.split(';');
+                            const ex = JSON.parse(JSON.stringify(baseEx));
+                            if (columns[0]) ex.name = columns[0].trim();
+                            if (columns[1]) ex.cadence = columns[1].trim();
+                            return ex;
+                        };
+
+                        const currentEx = MockDB.getExerciseById(id);
+                        if (currentEx) {
+                            const updatedEx = parseLineToExercise(lines[0], currentEx);
+                            updatedEx.id = currentEx.id;
+                            updatedEx.studentId = currentEx.studentId;
+                            MockDB.updateExercise(id, updatedEx);
+                        }
+
+                        let baseTime = Date.now();
+                        lines.slice(1).forEach((lineData, idx) => {
+                            const templateEx = {
+                                id: baseTime + idx + 10,
+                                studentId: App.state.activeStudentId, 
+                                name: "",
+                                type: "strength",
+                                cadence: "",
+                                day: App.state.currentDay,
+                                weeks: [
+                                    { s: '3', r: '10', w: '' }, { s: '', r: '', w: '' }, 
+                                    { s: '', r: '', w: '' }, { s: '', r: '', w: '' }
+                                ]
+                            };
+                            
+                            const newEx = parseLineToExercise(lineData, templateEx);
+                            if (newEx.name) {
+                                MockDB.addExerciseToPrescription(newEx);
+                            }
+                        });
+
+                        setTimeout(() => {
+                            App.navigate('prescription');
+                        }, 100);
+                    }
+                },
+
+                startTimer: (seconds) => {
+                    if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
+                    const container = document.getElementById('float-timer');
+                    const display = document.getElementById('timer-display');
+                    container.classList.remove('hidden');
+                    App.state.timerSeconds = seconds;
+                    const updateDisplay = () => {
+                        const m = Math.floor(App.state.timerSeconds / 60).toString().padStart(2, '0');
+                        const s = (App.state.timerSeconds % 60).toString().padStart(2, '0');
+                        display.innerText = `${m}:${s}`;
+                        if (App.state.timerSeconds <= 0) {
+                            clearInterval(App.state.restTimerInterval);
+                            display.innerText = "00:00";
+                            display.classList.add('text-green-400');
+                        }
+                    };
+                    updateDisplay();
+                    App.state.restTimerInterval = setInterval(() => { if (App.state.timerSeconds > 0) { App.state.timerSeconds--; updateDisplay(); } }, 1000);
+                },
+                adjustTimer: (amount) => {
+                    App.state.timerSeconds += amount; if(App.state.timerSeconds < 0) App.state.timerSeconds = 0;
+                    const m = Math.floor(App.state.timerSeconds / 60).toString().padStart(2, '0');
+                    const s = (App.state.timerSeconds % 60).toString().padStart(2, '0');
+                    document.getElementById('timer-display').innerText = `${m}:${s}`;
+                },
+                stopTimer: () => {
+                    if (App.state.restTimerInterval) clearInterval(App.state.restTimerInterval);
+                    document.getElementById('float-timer').classList.add('hidden');
+                },
+                updatePrescriptionInput: (inputEl, exerciseId, weekIndex, field) => {
+                    inputEl.classList.add('saved-pulse'); setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
+                    const ex = MockDB.getExerciseById(exerciseId);
+                    if(ex) { 
+                        if (!ex.weeks) ex.weeks = [];
+                        if (!ex.weeks[weekIndex]) ex.weeks[weekIndex] = { s: '', r: '', w: '' };
+                        ex.weeks[weekIndex][field] = inputEl.value; 
+                        MockDB.updateExercise(exerciseId, ex); 
+                    }
+                },
+                
+                updateExerciseMainField: (inputEl, exerciseId, field) => {
+                    inputEl.classList.add('saved-pulse'); 
+                    setTimeout(() => inputEl.classList.remove('saved-pulse'), 500);
+                    const ex = MockDB.getExerciseById(exerciseId);
+                    if(ex) { 
+                        ex[field] = inputEl.value; 
+                        MockDB.updateExercise(exerciseId, ex); 
+                    }
+                },
+                
+                addQuickRow: () => {
+                    if (!App.state.activeStudentId) return alert("Selecione um aluno primeiro!");
+                    const newEx = { 
+                        id: Date.now(), 
+                        studentId: App.state.activeStudentId, 
+                        name: "", 
+                        type: "strength", 
+                        cadence: "", 
+                        day: App.state.currentDay,
+                        weeks: [
+                            { s: '3', r: '10', w: '' }, 
+                            { s: '', r: '', w: '' }, 
+                            { s: '', r: '', w: '' }, 
+                            { s: '', r: '', w: '' }
+                        ]
+                    };
+                    MockDB.addExerciseToPrescription(newEx);
+                    App.navigate('prescription');
+                },
+                
+                saveWorkoutManual: () => {
+                    const btn = document.getElementById('btn-manual-save');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Salvo!';
+                    btn.classList.add('bg-green-600', 'border-green-500');
+                    btn.classList.remove('bg-slate-800', 'border-slate-700');
+                    
+                    App.Actions.saveStudentMessage();
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('bg-green-600', 'border-green-500');
+                        btn.classList.add('bg-slate-800', 'border-slate-700');
+                    }, 1500);
+                },
+
+                openAddStudentModal: () => { document.getElementById('student-name').value = ''; document.getElementById('add-student-modal').classList.add('active'); },
+                
+                closeModal: (modalId) => document.getElementById(modalId).classList.remove('active'),
+                switchDay: (day) => { App.state.currentDay = day; App.navigate('prescription'); },
+                saveNewStudent: () => {
+                    const name = document.getElementById('student-name').value;
+                    const goal = document.getElementById('student-goal').value;
+                    const status = document.getElementById('student-status').value;
+                    const split = document.getElementById('student-split').value; 
+                    if (!name) return alert("Por favor, insira o nome do aluno.");
+                    const initials = name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                    const newStudent = { id: Date.now(), name: name, goal: goal, split: split, status: status, plan: `${split} - Base`, img: initials, password: document.getElementById('student-password').value || '1234' };
+                    MockDB.addStudent(newStudent);
+                    App.Actions.closeModal('add-student-modal');
+                    App.navigate('dashboard');
+                },
+                updatePrescriptionSplit: (splitValue) => { if(App.state.activeStudentId) { MockDB.updateStudentSplit(App.state.activeStudentId, splitValue); App.state.currentDay = 'A'; App.navigate('prescription'); } },
+                
+                deleteExercise: (id) => { 
+                    MockDB.deleteExercise(id); 
+                    App.navigate('prescription'); 
+                },
+                
+                formatText: (command, value = null) => {
+                    if (command === 'decreaseFontSize' || command === 'increaseFontSize') {
+                        let currentSize = document.queryCommandValue('fontSize');
+                        if (!currentSize) currentSize = 3; 
+                        let newSize = parseInt(currentSize);
+                        if (command === 'decreaseFontSize') { newSize = Math.max(1, newSize - 1); } 
+                        else { newSize = Math.min(7, newSize + 1); }
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('fontSize', false, newSize);
+                    } else {
+                        document.execCommand(command, false, value);
+                    }
+                    const editor = document.getElementById('rich-text-editor');
+                    if (editor) editor.focus();
+                },
+
+                insertTable: () => {
+                    const html = `<table><thead><tr><th>H1</th><th>H2</th></tr></thead><tbody><tr><td>C1</td><td>C2</td></tr></tbody></table><br>`;
+                    document.execCommand('insertHTML', false, html);
+                },
+
+                addTableRow: () => {
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    while (node && node.nodeName !== 'TR') { node = node.parentNode; }
+                    if (node && node.nodeName === 'TR') {
+                        const newRow = node.cloneNode(true);
+                        const cells = newRow.querySelectorAll('td, th');
+                        cells.forEach(cell => cell.innerText = ' ');
+                        node.parentNode.insertBefore(newRow, node.nextSibling);
+                    } else {
+                        alert("Clique dentro de uma tabela para adicionar uma linha.");
+                    }
+                },
+
+                addTableCol: () => {
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') { node = node.parentNode; }
+                    if (node) {
+                        const cellIndex = node.cellIndex;
+                        const table = node.closest('table');
+                        const rows = table.rows;
+                        for (let i = 0; i < rows.length; i++) {
+                            const newCell = rows[i].insertCell(cellIndex + 1);
+                            newCell.innerText = ' ';
+                            newCell.style.border = "1px solid #475569";
+                            newCell.style.padding = "0.5rem";
+                            if(rows[i].parentNode.nodeName === 'THEAD') {
+                                newCell.outerHTML = `<th style="border:1px solid #475569;padding:0.5rem;text-align:left;background-color:#1e293b;font-weight:bold;"> </th>`;
+                            }
+                        }
+                    } else {
+                        alert("Clique dentro de uma tabela para adicionar uma coluna.");
+                    }
+                },
+
+                deleteTableElement: () => {
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    const tr = node.nodeType === 1 ? node.closest('tr') : node.parentElement.closest('tr');
+                    const table = node.nodeType === 1 ? node.closest('table') : node.parentElement.closest('table');
+                    if (tr) { tr.remove(); } else if (table) { table.remove(); } else { alert("Clique em uma tabela ou linha para apagar."); }
+                },
+
+                togglePainPoint: (groupId, label) => {
+                    const group = document.getElementById(groupId);
+                    if(group) {
+                        group.classList.toggle('pain-selected');
+                        const idx = App.state.painPoints.indexOf(label);
+                        if (idx > -1) { App.state.painPoints.splice(idx, 1); } else { App.state.painPoints.push(label); }
+                        App.Views.components.updatePainList();
+                    }
+                },
+                
+                exportReport: () => {
+                    if(!App.state.activeStudentId) return;
+                    const history = MockDB.getHistory(App.state.activeStudentId);
+                    const student = MockDB.getStudentById(App.state.activeStudentId);
+                    if(history.length === 0) return alert("Nenhum histórico encontrado para exportar.");
+                    let csvContent = "Data;Treino;Duracao (min);PSE;Observacoes;Carga Interna (UA)\n";
+                    history.forEach(row => {
+                        const date = formatDate(row.date);
+                        const obs = row.observations ? row.observations.replace(/(\r\n|\n|\r|;)/gm, " ") : "-";
+                        csvContent += `${date};Treino ${row.day};${row.duration};${row.pse};"${obs}";${row.internalLoad}\n`;
+                    });
+                    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `relatorio_${student.name.replace(/\s/g,'_')}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                deleteReport: (id) => {
+                    if(confirm("Excluir este registro permanentemente?")) {
+                        MockDB.deleteWorkout(id);
+                        App.navigate('reports');
+                    }
+                },
+
+                askToStartWorkout: () => { document.getElementById('start-workout-confirm-modal').classList.add('active'); },
+                confirmStartWorkout: () => {
+                    App.Actions.closeModal('start-workout-confirm-modal');
+                    const selectedDay = document.getElementById('workout-day-select').value;
+                    App.state.workoutDayToExecute = selectedDay;
+                    App.state.workoutStartTime = new Date(); 
+                    App.Actions.saveLocalState();
+                    App.navigate('student_workout'); 
+                },
+                askToFinishWorkout: () => { 
+                    const durationMin = Math.round((new Date() - App.state.workoutStartTime) / 60000);
+                    document.getElementById('manual-workout-duration').value = durationMin > 0 ? durationMin : 0;
+                    document.getElementById('finish-workout-confirm-modal').classList.add('active'); 
+                },
+                confirmFinishWorkout: () => {
+                    App.Actions.closeModal('finish-workout-confirm-modal');
+                    const pse = document.getElementById('slider-pse').value;
+                    let obs = document.getElementById('workout-notes').value;
+                    const durationManual = parseInt(document.getElementById('manual-workout-duration').value) || 0;
+                    const load = pse * durationManual;
+                    const activeStudentId = App.state.activeStudentId;
+                    const day = App.state.workoutDayToExecute;
+                    const exercises = MockDB.getPrescription(activeStudentId).filter(ex => (ex.day || 'A') === day);
+                    let exerciseDetails = [];
+                    exercises.forEach(ex => {
+                        const input = document.getElementById(`obs-ex-${ex.id}`);
+                        if(input && input.value.trim() !== "") {
+                            exerciseDetails.push(`[${ex.name}: ${input.value.trim()}]`);
+                        }
+                    });
+                    if (exerciseDetails.length > 0) {
+                        if (obs.trim() !== "") obs += " | ";
+                        obs += "Detalhes: " + exerciseDetails.join(", ");
+                    }
+                    const workoutData = { 
+                        date: new Date(), 
+                        studentId: activeStudentId, 
+                        day: day, 
+                        duration: durationManual, 
+                        pse: parseInt(pse), 
+                        observations: obs, 
+                        internalLoad: load, 
+                        pain: App.state.painPoints 
+                    };
+                    MockDB.saveWorkout(workoutData);
+                    App.tempSummary = workoutData;
+                    App.Actions.clearLocalState();
+                    App.state.workoutStartTime = null;
+                    App.navigate('student_summary');
+                }
+            },
+
+            navigate: (view) => {
+                if(App.state.timerInterval) clearInterval(App.state.timerInterval);
+                App.state.currentView = view;
+                if (App.state.role === 'coach') {
+                    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                    const activeEl = document.getElementById(`nav-${view}`);
+                    if (activeEl) activeEl.classList.add('active');
+                }
+                const content = document.getElementById('app-content');
+                content.innerHTML = ''; 
+                switch (view) {
+                    case 'landing': App.Views.renderLanding(content); break; 
+                    case 'dashboard': App.Views.renderDashboard(content); break;
+                    case 'prescription': App.Views.renderPrescription(content); break;
+                    case 'reports': App.Views.renderReports(content); break; 
+                    case 'student_login': App.Views.renderStudentLogin(content, ''); break;
+                    case 'student_checkin': App.Views.renderStudentCheckin(content); break;
+                    case 'student_workout': App.Views.renderStudentWorkout(content); break;
+                    case 'student_summary': App.Views.renderStudentSummary(content); break;
+                }
+            },
+            
+            switchBodyView: (view) => {
+                App.state.bodyView = view;
+                const container = document.getElementById('body-map-container');
+                if (container) container.innerHTML = App.Views.components.getBodySVG(view);
+                document.getElementById('btn-front').className = view === 'front' ? 'px-3 py-1 bg-slate-700 text-white rounded text-xs' : 'px-3 py-1 text-slate-500 hover:text-white rounded text-xs';
+                document.getElementById('btn-back').className = view === 'back' ? 'px-3 py-1 bg-slate-700 text-white rounded text-xs' : 'px-3 py-1 text-slate-500 hover:text-white rounded text-xs';
+                App.state.painPoints.forEach(pain => { 
+                    const groupId = `pain-group-${pain.replace(/\s+/g, '-')}`;
+                    const group = document.getElementById(groupId);
+                    if (group) group.classList.add('pain-selected'); 
+                });
+            },
+            startWorkout: () => { App.Actions.askToStartWorkout(); },
+            finishWorkout: () => { App.Actions.askToFinishWorkout(); },
+
+         Views: {
+                renderLanding: (container) => {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
+                            <div class="text-center mb-12">
+                                <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">
+                                    Smart<span class="text-blue-500">Mesocycle</span>
+                                </h1>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Powered by Alyson Felipe - CREF 03552 G/Pi</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
+                                <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
+                                    <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                        <i class="fa-solid fa-user-tie text-3xl text-blue-400"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="text-xl font-bold text-white mb-1">Sou Treinador</h3>
+                                        <p class="text-xs text-slate-500">Acesso Restrito</p>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="App.Actions.startStudentFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all group border border-slate-700">
+                                    <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                        <i class="fa-solid fa-running text-3xl text-green-400"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="text-xl font-bold text-white mb-1">Sou Aluno</h3>
+                                        <p class="text-xs text-slate-500">Acesso ao Treino</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                renderDashboard: (container) => {
+                    const students = MockDB.getStudents();
+                    
+                    const renderStatusBadge = (status) => { 
+                        const map = { 
+                            'active': '<span class="badge badge-active">Ativo</span>', 
+                            'warning': '<span class="badge badge-warning">Atenção</span>', 
+                            'inactive': '<span class="badge badge-inactive">Inativo</span>' 
+                        }; 
+                        return map[status] || map['inactive']; 
+                    };
+                    
+                    let contentHTML = '';
+                    
+                    if (students.length === 0) {
+                        contentHTML = `
+                            <div class="col-span-full glass-panel p-10 rounded-xl border-dashed border-2 border-slate-700 flex flex-col items-center justify-center text-center animate-fade-in">
+                                <div class="bg-slate-800 p-4 rounded-full mb-4">
+                                    <i class="fa-solid fa-users text-3xl text-slate-500"></i>
+                                </div>
+                                <h3 class="text-white font-bold text-lg">Nenhum Aluno Encontrado</h3>
+                                <p class="text-slate-400 text-sm max-w-xs mt-2 mb-6">Comece cadastrando seu primeiro aluno.</p>
+                                <button onclick="App.Actions.openAddStudentModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-plus"></i> Cadastrar Primeiro Aluno
+                                </button>
+                            </div>`;
+                    } else {
+                        contentHTML = students.map(s => `
+                            <div onclick="App.Actions.selectStudent(${s.id})" class="glass-panel p-4 rounded-xl border border-slate-700 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden animate-fade-in">
+                                <div class="absolute top-2 right-2 flex gap-1">
+                                    <button onclick="App.Actions.duplicateStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors" title="Duplicar como Template">
+                                        <i class="fa-regular fa-copy text-[10px]"></i>
+                                    </button>
+                                    <button onclick="App.Actions.openEditStudentModal(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-yellow-900/50 text-slate-400 hover:text-yellow-400 flex items-center justify-center transition-colors" title="Editar Perfil">
+                                        <i class="fa-solid fa-pencil text-[10px]"></i>
+                                    </button>
+                                    <button onclick="App.Actions.deleteStudent(${s.id}, event)" class="w-6 h-6 rounded bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-400 flex items-center justify-center transition-colors" title="Excluir Aluno">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-600 text-sm">${s.img}</div>
+                                    <div>
+                                        <h3 class="text-white font-bold text-sm group-hover:text-blue-400 transition-colors truncate w-32">${s.name}</h3>
+                                        <p class="text-[10px] text-slate-500 uppercase tracking-wider">${s.goal}</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 mb-4">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-slate-500">Status</span>
+                                        ${renderStatusBadge(s.status)}
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-slate-500">Plano Atual</span>
+                                        <span class="text-slate-300 font-medium truncate max-w-[120px] text-right" title="${s.plan || s.split}">${s.plan || s.split}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2 pt-3 border-t border-slate-700/50 flex gap-2">
+                                    <button class="flex-1 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-colors">Ver Treino</button>
+                                </div>
+                            </div>`).join('');
+                    }
+                    container.innerHTML = `
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white tracking-tight">Gestão de Carteira</h2>
+                                <p class="text-slate-400 text-sm">Controle de alunos e prescrição.</p>
+                            </div>
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <button onclick="App.Actions.openAddStudentModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                                    <i class="fa-solid fa-user-plus"></i> <span class="hidden md:inline">Novo Aluno</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">${contentHTML}</div>
+                    `;
+                },
+
+                renderReports: (container) => {
+                    const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
+                    if (!activeStudent) return container.innerHTML = `<div class="text-center text-slate-500 mt-10">Selecione um aluno na dashboard para ver o relatório.</div>`;
+                    
+                    const history = MockDB.getHistory(activeStudent.id);
+                    
+                    const rows = history.map(h => {
+                        const date = formatDate(h.date);
+                        const time = formatTime(h.date);
+                        const obs = h.observations ? `<i class="fa-solid fa-comment-dots text-blue-400" title="${h.observations}"></i>` : '-';
+                        const isPresencial = h.type === 'presencial';
+                        const rowClass = isPresencial ? 'presence-row' : '';
+                        const badgeHTML = isPresencial ? '<span class="presence-badge">PRESENCIAL</span>' : `<span class="badge ${h.pse > 7 ? 'badge-warning' : 'badge-active'}">PSE ${h.pse}</span>`;
+
+                        return `
+                        <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition group ${rowClass}">
+                            <td class="p-3 text-white">${date} <span class="text-xs text-slate-500">${time}</span></td>
+                            <td class="p-3 text-blue-400 font-bold">Treino ${h.day}</td>
+                            <td class="p-3 text-slate-300 text-center">${h.duration} min</td>
+                            <td class="p-3 text-center">${badgeHTML}</td>
+                            <td class="p-3 text-center">${obs}</td>
+                            <td class="p-3 text-right text-white font-mono">${h.internalLoad}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="App.Actions.deleteReport(${h.id})" class="text-slate-600 hover:text-red-400 transition p-2 rounded hover:bg-slate-800" title="Excluir Registro">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                    }).join('');
+
+                    container.innerHTML = `
+                    <div class="glass-panel p-6 rounded-xl border border-slate-700 mb-6 animate-fade-in">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">${activeStudent.img}</div>
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">Histórico</h2>
+                                    <p class="text-xs text-slate-400">Aluno: ${activeStudent.name}</p>
+                                </div>
+                            </div>
+                            <button onclick="App.Actions.exportReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105">
+                                <i class="fa-solid fa-file-csv"></i> Exportar (CSV)
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto rounded-lg border border-slate-700">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">Data</th>
+                                        <th class="p-3">Sessão</th>
+                                        <th class="p-3 text-center">Duração</th>
+                                        <th class="p-3 text-center">Intensidade</th>
+                                        <th class="p-3 text-center">Obs</th>
+                                        <th class="p-3 text-right">Carga (UA)</th>
+                                        <th class="p-3 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700">
+                                    ${rows.length > 0 ? rows : '<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum treino registrado ainda.</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                },
+
+                renderPrescription: (container) => {
+                    const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
+                    if (!activeStudent) return container.innerHTML = `<div class="text-center text-slate-500 mt-10">Selecione um aluno na dashboard.</div>`;
+                    
+                    const fullPrescription = MockDB.getPrescription(activeStudent.id);
+                    const currentSplit = activeStudent.split || 'Fullbody';
+                    const activeDay = App.state.currentDay;
+                    
+                    let tabs = [];
+                    if (currentSplit === 'Fullbody') tabs = ['A']; 
+                    else if (currentSplit === 'Fullbody AB') tabs = ['A', 'B']; 
+                    else if (currentSplit === 'ABC') tabs = ['A', 'B', 'C']; 
+                    else if (currentSplit === 'ABCD') tabs = ['A', 'B', 'C', 'D']; 
+                    else if (currentSplit === 'ABCDE') tabs = ['A', 'B', 'C', 'D', 'E'];
+                    
+                    if (!tabs.includes(activeDay)) App.state.currentDay = 'A';
+                    
+                    const exercises = fullPrescription.filter(ex => (ex.day || 'A') === App.state.currentDay);
+                    const tabsHTML = tabs.map(t => `<div onclick="App.Actions.switchDay('${t}')" class="workout-tab ${App.state.currentDay === t ? 'active' : ''}">Treino ${t}</div>`).join('');
+                    
+                    container.innerHTML = `
+                    <div class="glass-panel p-4 mb-4 rounded-xl border border-slate-700">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+                            <div class="w-full md:w-auto">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-6 h-6 rounded-full bg-blue-600 text-xs flex items-center justify-center text-white font-bold">${activeStudent.img}</div>
+                                    <h2 class="text-xl font-bold text-white">Prescrição: <span class="text-blue-400">${activeStudent.name}</span></h2>
+                                </div>
+                                <div class="flex flex-wrap gap-4 items-end">
+                                    <div>
+                                        <label class="text-[10px] text-blue-400 uppercase font-bold block mb-1">Divisão Atual</label>
+                                        <select onchange="App.Actions.updatePrescriptionSplit(this.value)" class="input-sci py-1 text-sm bg-slate-800 border-blue-500/30">
+                                            <option value="Fullbody" ${currentSplit === 'Fullbody' ? 'selected' : ''}>Fullbody (Corpo Inteiro)</option>
+                                            <option value="Fullbody AB" ${currentSplit === 'Fullbody AB' ? 'selected' : ''}>Fullbody AB</option>
+                                            <option value="ABC" ${currentSplit === 'ABC' ? 'selected' : ''}>ABC</option>
+                                            <option value="ABCD" ${currentSplit === 'ABCD' ? 'selected' : ''}>ABCD</option>
+                                            <option value="ABCDE" ${currentSplit === 'ABCDE' ? 'selected' : ''}>ABCDE</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="App.Actions.openPresenceModal()" class="btn-action text-xs bg-yellow-600/80 hover:bg-yellow-600 flex items-center gap-2 border border-yellow-500/30 text-yellow-100">
+                                    <i class="fa-solid fa-person-chalkboard"></i> Presencial
+                                </button>
+                                <button id="btn-manual-save" onclick="App.Actions.saveWorkoutManual()" class="btn-action text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-save"></i> Salvar
+                                </button>
+                                <button onclick="App.Actions.addQuickRow()" class="btn-action text-xs bg-blue-600 hover:bg-blue-500 flex items-center gap-2">
+                                    <i class="fa-solid fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex border-b border-slate-700 mt-2">${tabsHTML}</div>
+                    </div>
+                    
+                    <div class="glass-panel rounded-xl overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300 min-w-[1000px] border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="p-3 w-10 bg-slate-900 border-r border-slate-700 sticky left-0 z-20"></th>
+                                    <th class="p-3 w-48 bg-slate-900 border-r border-slate-700 sticky left-10 z-10"></th>
+                                    <th class="p-3 w-20 bg-slate-900 border-r border-slate-700 text-center">Cadência</th>
+                                    <th colspan="3" class="sheet-header text-center border-l-2 border-slate-600 bg-slate-800/50 text-emerald-400">SEMANA 1 (BASE)</th>
+                                    <th colspan="3" class="sheet-header text-center border-l-2 border-slate-600 bg-slate-800/30 text-blue-400">SEMANA 2 (ACÚMULO)</th>
+                                    <th colspan="3" class="sheet-header text-center border-l-2 border-slate-600 bg-slate-800/30 text-purple-400">SEMANA 3 (CHOQUE)</th>
+                                    <th colspan="3" class="sheet-header text-center border-l-2 border-slate-600 bg-yellow-900/10 text-yellow-500">SEMANA 4 (DELOAD)</th>
+                                </tr>
+                                <tr class="text-[10px] uppercase font-bold text-slate-500 bg-slate-900">
+                                    <th class="p-2 border-r border-slate-700 sticky left-0 z-20 bg-slate-900 text-center"><i class="fa-solid fa-trash"></i></th>
+                                    <th class="p-2 border-r border-slate-700 sticky left-10 z-10 bg-slate-900">Exercício</th>
+                                    <th class="p-2 border-r border-slate-700 text-center">Tempo</th>
+                                    <th class="sheet-cell text-center w-12">Sets</th><th class="sheet-cell text-center w-16">Reps</th><th class="sheet-cell text-center w-16">Carga</th>
+                                    <th class="sheet-cell text-center w-12 border-l border-slate-700">Sets</th><th class="sheet-cell text-center w-16">Reps</th><th class="sheet-cell text-center w-16">Carga</th>
+                                    <th class="sheet-cell text-center w-12 border-l border-slate-700">Sets</th><th class="sheet-cell text-center w-16">Reps</th><th class="sheet-cell text-center w-16">Carga</th>
+                                    <th class="sheet-cell text-center w-12 border-l border-slate-700">Sets</th><th class="sheet-cell text-center w-16">Reps</th><th class="sheet-cell text-center w-16">Carga</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs">
+                                ${exercises.map(ex => `
+                                    <tr class="hover:bg-slate-800/40 transition group border-b border-slate-700/50">
+                                        <td class="p-1 border-r border-slate-700 sticky left-0 z-20 bg-slate-900/90 text-center group-hover:bg-red-900/20 transition-colors">
+                                            <button type="button" onclick="App.Actions.deleteExercise(${ex.id})" class="text-slate-600 hover:text-red-500 transition-colors w-full h-full flex items-center justify-center p-2" title="Excluir Linha"><i class="fa-solid fa-times text-lg"></i></button>
+                                        </td>
+                                        <td class="p-1 border-r border-slate-700 sticky left-10 z-10 bg-slate-900 group-hover:bg-slate-800 transition">
+                                            <input type="text" value="${ex.name}" class="sheet-input sheet-input-text font-bold text-white w-full" placeholder="Cole ou digite..." onchange="App.Actions.updateExerciseMainField(this, ${ex.id}, 'name')" onpaste="App.Actions.handleBatchPaste(event, ${ex.id})">
+                                        </td>
+                                        <td class="p-1 border-r border-slate-700 text-center bg-slate-900/50">
+                                            <input type="text" value="${ex.cadence}" class="sheet-input text-yellow-500 font-mono text-center" placeholder="2010" onchange="App.Actions.updateExerciseMainField(this, ${ex.id}, 'cadence')">
+                                        </td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[0].s}" class="sheet-input text-emerald-400 font-bold" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 0, 's')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[0].r}" class="sheet-input text-emerald-400" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 0, 'r')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[0].w}" class="sheet-input text-emerald-400" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 0, 'w')"></td>
+                                        <td class="sheet-cell border-l border-slate-700"><input value="${ex.weeks[1].s}" class="sheet-input text-blue-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 1, 's')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[1].r}" class="sheet-input text-blue-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 1, 'r')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[1].w}" class="sheet-input text-blue-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 1, 'w')"></td>
+                                        <td class="sheet-cell border-l border-slate-700"><input value="${ex.weeks[2].s}" class="sheet-input text-purple-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 2, 's')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[2].r}" class="sheet-input text-purple-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 2, 'r')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[2].w}" class="sheet-input text-purple-300" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 2, 'w')"></td>
+                                        <td class="sheet-cell border-l border-slate-700"><input value="${ex.weeks[3].s}" class="sheet-input text-yellow-500" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 3, 's')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[3].r}" class="sheet-input text-yellow-500" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 3, 'r')"></td>
+                                        <td class="sheet-cell"><input value="${ex.weeks[3].w}" class="sheet-input text-yellow-500" onchange="App.Actions.updatePrescriptionInput(this, ${ex.id}, 3, 'w')"></td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="glass-panel p-4 mt-4 rounded-xl border border-slate-700">
+                        <h3 class="text-white font-bold text-sm mb-2 flex items-center"><i class="fa-solid fa-message text-blue-500 mr-2"></i>Recado para o Aluno</h3>
+                        <div class="rich-editor-container">
+                            <div class="rich-toolbar">
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.formatText('bold')" title="Negrito"><b>B</b></button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.formatText('italic')" title="Itálico"><i>I</i></button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.formatText('decreaseFontSize')" title="Diminuir Fonte"><i class="fa-solid fa-minus"></i></button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.formatText('increaseFontSize')" title="Aumentar Fonte"><i class="fa-solid fa-plus"></i></button>
+                                <div class="w-px bg-slate-600 h-6 mx-2"></div>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.insertTable()" title="Inserir Tabela"><i class="fa-solid fa-table"></i> Tabela</button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.addTableRow()" title="Adicionar Linha"><i class="fa-solid fa-plus"></i> Linha</button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn" onclick="App.Actions.addTableCol()" title="Adicionar Coluna"><i class="fa-solid fa-plus"></i> Coluna</button>
+                                <button onmousedown="event.preventDefault();" class="rich-btn text-red-400 hover:text-red-300" onclick="App.Actions.deleteTableElement()" title="Remover"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div id="rich-text-editor" class="rich-content" contenteditable="true" onblur="App.Actions.saveStudentMessage()">
+                                ${activeStudent.message || 'Digite aqui...'}
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                },
+
+                renderStudentLogin: (container, filter = '') => {
+                    const students = MockDB.getStudents();
+                    const filtered = students.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+                    let contentHTML = '';
+                    
+                    if (filter.length === 0) {
+                        contentHTML = `
+                            <div class="text-center text-slate-500 mt-8">
+                                <i class="fa-solid fa-search text-4xl mb-4 opacity-50"></i>
+                                <p>Digite seu nome acima para acessar.</p>
+                            </div>`;
+                    } else if (filtered.length === 0) {
+                        contentHTML = `<p class="col-span-full text-center text-slate-500 italic mt-8">Aluno não encontrado.</p>`;
+                    } else {
+                        contentHTML = `<div class="grid grid-cols-1 gap-3 w-full max-w-sm px-4 mt-4">
+                            ${filtered.map(s => `
+                                <div onclick="App.Actions.promptStudentPassword(${s.id})" class="glass-panel p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all border border-slate-700">
+                                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-sm font-bold text-white">${s.img}</div>
+                                    <div class="text-left"><p class="font-bold text-white text-sm">${s.name}</p></div>
+                                    <i class="fa-solid fa-lock text-slate-500 ml-auto text-xs"></i>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    }
+
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-start h-full animate-fade-in pt-20 pb-20">
+                            <div class="absolute top-4 left-4">
+                                <button onclick="App.Actions.logout()" class="flex items-center text-slate-400 hover:text-white transition-colors gap-2 text-sm font-bold bg-slate-800 px-3 py-2 rounded-lg">
+                                    <i class="fa-solid fa-arrow-left"></i> Início
+                                </button>
+                            </div>
+                            <div class="bg-green-600/20 p-4 rounded-full mb-6 ring-4 ring-green-500/20">
+                                <i class="fa-solid fa-running text-4xl text-green-400"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white mb-2">Quem vai treinar?</h2>
+                            <div class="w-full max-w-sm relative">
+                                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
+                                <input type="text" oninput="App.Actions.filterStudents(this.value)" class="w-full bg-slate-800 border border-slate-600 text-white rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-green-500 transition-colors" placeholder="Digite seu nome..." value="${filter}" autofocus>
+                            </div>
+                            ${contentHTML}
+                        </div>`;
+                },
+
+                renderStudentCheckin: (container) => {
+                    const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
+                    if (!activeStudent) return App.navigate('student_login');
+                    
+                    const history = MockDB.getHistory(activeStudent.id);
+                    const today = new Date();
+                    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    
+                    let calendarHTML = '';
+                    const weekDays = ['D','S','T','Q','Q','S','S'];
+                    weekDays.forEach(d => calendarHTML += `<div class="text-[10px] text-slate-500 font-bold uppercase">${d}</div>`);
+
+                    const firstDayOfWeek = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+                    for(let i=0; i<firstDayOfWeek; i++) { 
+                        calendarHTML += `<div></div>`; 
+                    }
+
+                    for(let i=1; i<=daysInMonth; i++) {
+                        const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                        const hasWorkout = history.some(h => new Date(h.date).toDateString() === new Date(dateStr).toDateString());
+                        const isToday = i === today.getDate();
+                        calendarHTML += `<div class="calendar-day ${hasWorkout ? 'active' : ''} ${isToday ? 'today' : ''}">${i}</div>`;
+                    }
+                    const options = (activeStudent.split || 'Fullbody').includes('Fullbody') ? ['A','B'] : ['A','B','C','D','E'];
+                    
+                    const workoutCounts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0 };
+                    history.forEach(h => { if (workoutCounts.hasOwnProperty(h.day)) { workoutCounts[h.day]++; } });
+
+                    const splitMap = { 'Fullbody': ['A'], 'Fullbody AB': ['A','B'], 'ABC': ['A','B','C'], 'ABCD': ['A','B','C','D'], 'ABCDE': ['A','B','C','D','E'] };
+                    const studentSplit = splitMap[activeStudent.split] || ['A'];
+                    
+                    const balanceHTML = `
+                        <div class="flex flex-wrap gap-2 justify-center mt-3 pt-3 border-t border-slate-700/50">
+                            ${studentSplit.map(day => `
+                                <div class="bg-slate-800/80 px-2 py-1 rounded border border-slate-700 flex items-center gap-1.5 shadow-sm">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Treino ${day}</span>
+                                    <span class="text-xs font-bold text-white bg-blue-600/20 px-1.5 rounded text-blue-400 border border-blue-500/20">${workoutCounts[day]}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    const messageHTML = activeStudent.message ? `<div class="glass-panel p-4 rounded-xl mb-6 border-l-4 border-l-purple-500 animate-fade-in bg-slate-800/80"><h3 class="text-xs font-bold text-purple-400 uppercase mb-2 flex items-center"><i class="fa-solid fa-message mr-2"></i> Recado do Treinador</h3><div class="text-white text-sm message-render">${activeStudent.message}</div></div>` : '';
+
+                    container.innerHTML = `
+                        <div class="max-w-md mx-auto mt-6 pb-20 px-4">
+                            <div class="flex justify-between items-center mb-6"><button onclick="App.Actions.goBackToLogin()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><i class="fa-solid fa-user-gear"></i> Trocar Aluno / Sair</button></div>
+                            <div class="text-center mb-6"><h2 class="text-2xl font-bold text-white">Olá, ${activeStudent.name.split(' ')[0]}!</h2><p class="text-slate-400 text-sm">Pronto para o treino?</p></div>
+                            <div class="glass-panel p-4 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-slate-400 uppercase">Frequência Mensal</span><span class="text-xs text-green-400 font-bold">${history.length} Treinos</span></div><div class="calendar-grid">${calendarHTML}</div>${balanceHTML}</div>
+                            <div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-blue-500"><label class="text-sm font-bold text-blue-400 uppercase mb-2 block">Qual treino hoje?</label><select id="workout-day-select" class="input-sci text-lg py-3 bg-slate-900 border-slate-700">${options.map(o => `<option value="${o}">Treino ${o}</option>`).join('')}</select></div>
+                            ${messageHTML}
+                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Prontidão (PSR)</label><span class="text-2xl font-bold text-white" id="psr-display">8</span></div><input type="range" min="0" max="10" value="8" class="w-full h-3 rounded-lg cursor-pointer slider-psr" oninput="document.getElementById('psr-display').innerText=this.value"></div>
+                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Dor (EVA)</label><span class="text-2xl font-bold text-white" id="eva-display">2</span></div><input type="range" min="0" max="10" value="2" class="w-full h-3 rounded-lg cursor-pointer slider-eva" oninput="document.getElementById('eva-display').innerText=this.value"></div>
+                            <div class="glass-panel p-6 rounded-xl mb-8"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Localizar Dor</label><div class="bg-slate-800 rounded p-1 flex"><button id="btn-front" class="px-3 py-1 bg-slate-700 text-white rounded text-xs" onclick="App.switchBodyView('front')">Frente</button><button id="btn-back" class="px-3 py-1 text-slate-500 hover:text-white rounded text-xs" onclick="App.switchBodyView('back')">Costas</button></div></div><div class="flex justify-center mb-4" id="body-map-container">${App.Views.components.getBodySVG('front')}</div><div class="pt-3 min-h-[20px]" id="pain-list-container"><div id="selected-pain-list" class="flex flex-wrap gap-2 justify-center"></div></div></div>
+                            <button onclick="App.startWorkout()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg text-lg">Iniciar Treino</button>
+                        </div>`;
+                },
+                
+                renderStudentWorkout: (container) => {
+                    const activeStudent = MockDB.getStudentById(App.state.activeStudentId);
+                    if (!activeStudent) return App.navigate('student_login');
+                    const day = App.state.workoutDayToExecute;
+                    const history = MockDB.getHistory(activeStudent.id);
+
+                    const thisDayHistory = history.filter(h => h.day === day);
+                    const getWeekID = (dateInput) => {
+                        let d; try { d = (dateInput && typeof dateInput.toDate === 'function') ? dateInput.toDate() : new Date(dateInput); } catch(e) { d = new Date(); }
+                        d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const yearStart = new Date(d.getFullYear(),0,1);
+                        const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+                        return `${d.getFullYear()}-W${weekNo}`;
+                    };
+
+                    const currentWeekID = getWeekID(new Date());
+                    const previousWeeksSet = new Set();
+                    thisDayHistory.forEach(h => {
+                        const wID = getWeekID(h.date);
+                        if (wID !== currentWeekID) { previousWeeksSet.add(wID); }
+                    });
+
+                    const currentWeekIndex = previousWeeksSet.size % 4;
+                    const weekNames = ['Base', 'Acúmulo', 'Choque', 'Deload'];
+                    const currentWeekName = weekNames[currentWeekIndex];
+
+                    const exercises = MockDB.getPrescription(activeStudent.id).filter(ex => (ex.day || 'A') === day);
+                    
+                    container.innerHTML = `
+                    <div class="pb-24 max-w-lg mx-auto px-4">
+                        <div class="sticky top-0 bg-slate-900/95 backdrop-blur z-20 py-4 border-b border-slate-800 flex justify-between items-center mb-6">
+                            <button onclick="App.Actions.goBackToCheckin()" class="text-slate-400 hover:text-white w-10 h-10 flex items-center justify-center bg-slate-800 rounded-lg border border-slate-700 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+                            <div class="flex flex-col items-center">
+                                <h2 class="text-xl font-black text-white tracking-tighter">TREINO ${day}</h2>
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    <span class="text-[10px] font-bold text-slate-950 bg-blue-500 px-2 py-0.5 rounded uppercase tracking-wide">Semana ${currentWeekIndex + 1}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 border border-slate-700 bg-slate-800 px-2 py-0.5 rounded uppercase tracking-wide">${currentWeekName}</span>
+                                </div>
+                            </div>
+                            <button onclick="App.Actions.startTimer(60)" class="text-blue-400 hover:text-white hover:bg-blue-600 font-bold bg-slate-800 w-10 h-10 flex items-center justify-center rounded-lg border border-slate-700 shadow-lg transition-all"><i class="fa-solid fa-stopwatch"></i></button>
+                        </div>
+                        
+                        ${exercises.length > 0 ? exercises.map((ex, idx) => {
+                            const weekData = ex.weeks[currentWeekIndex] || ex.weeks[0];
+                            const sets = parseInt(weekData.s) || 1; 
+                            return `
+                            <div class="glass-panel p-5 rounded-xl border-l-4 border-l-blue-500 mb-4 animate-fade-in" style="animation-delay: ${idx * 50}ms">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="font-bold text-lg text-white leading-tight max-w-[80%]">${ex.name}</h3>
+                                    ${ex.cadence ? `<span class="text-[10px] font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-mono whitespace-nowrap" title="Cadência">${ex.cadence}</span>` : ''}
+                                </div>
+                                ${ex.notes ? `<div class="text-xs text-slate-400 italic mb-3 bg-slate-800/30 p-2 rounded border border-slate-700/30"><i class="fa-solid fa-info-circle mr-1 text-blue-500"></i> ${ex.notes}</div>` : ''}
+                                <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider"><div>Séries</div><div>Carga</div><div>Reps</div><div>Feito</div></div>
+                                <div class="space-y-2">
+                                    ${Array.from({length: sets}).map((_, i) => `
+                                    <div class="grid grid-cols-4 gap-2 items-center bg-slate-800/40 p-2 rounded border border-slate-700/30">
+                                        <div class="text-white font-bold text-center">${i + 1}</div>
+                                        <div class="text-blue-300 font-mono font-bold text-center text-sm">${weekData.w || '-'}</div>
+                                        <div class="text-white font-mono text-center text-sm">${weekData.r || '-'}</div>
+                                        <div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div>
+                                    </div>`).join('')}
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-slate-700/50">
+                                    <input type="text" id="obs-ex-${ex.id}" class="w-full bg-slate-900 border border-slate-700 rounded text-xs p-2.5 text-slate-300 focus:border-blue-500 outline-none transition-colors" placeholder="Usou a carga proposta?">
+                                </div>
+                            </div>`
+                        }).join('') : `<div class="p-8 text-center text-slate-500 bg-slate-800 rounded-xl border border-slate-700 dashed border-2">Nenhum exercício cadastrado para o Treino ${day}.</div>`}
+                        
+                        <div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700">
+                            <h4 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i> Feedback da Sessão</h4>
+                            <div class="flex justify-between items-center mb-2"><span class="text-xs text-slate-400 uppercase font-bold">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div>
+                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value"><label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Notas Gerais</label><textarea id="workout-notes" class="input-sci w-full h-24 resize-none bg-slate-900 border-slate-700 focus:border-blue-500" placeholder="Como você se sentiu hoje?"></textarea></div><button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8 transition-transform active:scale-95 flex items-center justify-center gap-2"><i class="fa-solid fa-flag-checkered"></i> Finalizar Treino</button></div>`;
+                },
+                renderStudentSummary: (container) => {
+                    const data = App.tempSummary;
+                    if (!data) { App.navigate('landing'); return; }
+                    container.innerHTML = `<div class="max-w-md mx-auto mt-10 text-center px-4"><h2 class="text-2xl font-bold text-white mb-2">Treino Finalizado!</h2><p class="text-slate-400 text-sm mb-6">Sua frequência foi registrada.</p><div class="glass-panel p-6 rounded-xl mb-6 text-left"><div class="grid grid-cols-2 gap-4"><div><p class="text-[10px] text-slate-400 uppercase">Duração</p><p class="text-xl font-bold text-white">${data.duration} min</p></div><div><p class="text-[10px] text-slate-400 uppercase">PSE</p><p class="text-xl font-bold text-white">${data.pse}</p></div><div class="col-span-2 mt-2 pt-2 border-t border-slate-700/50"><p class="text-[10px] text-blue-400 uppercase font-bold">Carga (UA)</p><p class="text-4xl font-bold text-white">${data.internalLoad}</p></div></div></div><button onclick="App.Actions.logout()" class="btn-action bg-slate-800 w-full py-3">Sair</button></div>`;
+                },
+                components: {
+                    updatePainList: () => {
+                        const container = document.getElementById('selected-pain-list');
+                        if (!container) return;
+                        container.innerHTML = '';
+                        if (App.state.painPoints.length === 0) return;
+                        App.state.painPoints.forEach(pain => {
+                            const badge = document.createElement('span');
+                            badge.className = 'px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/30';
+                            badge.innerText = pain;
+                            container.appendChild(badge);
+                        });
+                    },
+                    getBodySVG: (view) => {
+                        const labelGroup = (id, x, y, label, lineX, lineY) => { 
+                            const side = x < 150 ? 'left' : 'right';
+                            return `<g id="${id}" class="pain-group" onclick="App.Actions.togglePainPoint(this.id, '${label}')"><line x1="${side === 'left' ? x + 70 : x}" y1="${y + 18/2}" x2="${lineX}" y2="${lineY}" class="diagram-line" /><rect x="${x}" y="${y}" width="70" height="18" class="diagram-label-box" /><text x="${x + 35}" y="${y + 13}" class="diagram-label-text">${label}</text></g>`; 
+                        };
+                        if (view === 'front') return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Frontal</text><g transform="translate(100, 40) scale(0.7)"><path d="M70 55 Q90 55 100 55 Q110 55 130 55 Q140 60 135 80 L130 90 L100 90 L70 90 L65 80 Q60 60 70 55" class="body-silhouette"/><circle cx="100" cy="30" r="15" class="body-silhouette" /><path d="M80 60 L120 60 L115 90 L85 90 Z" class="body-silhouette"/><rect x="55" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="40" rx="5" class="body-silhouette"/><rect x="50" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="132" y="130" width="18" height="35" rx="3" class="body-silhouette"/><rect x="82" y="92" width="36" height="50" rx="2" class="body-silhouette"/><path d="M80 150 L98 150 L95 220 L82 220 Z" class="body-silhouette"/><path d="M102 150 L120 150 L118 220 L105 220 Z" class="body-silhouette"/><rect x="85" y="240" width="12" height="40" rx="2" class="body-silhouette"/><rect x="103" y="240" width="12" height="40" rx="2" class="body-silhouette"/><circle cx="95" cy="28" r="1.5" fill="#475569" /><circle cx="105" cy="28" r="1.5" fill="#475569" /><path d="M97 38 Q100 42 103 38" stroke="#475569" fill="none" stroke-width="1" /></g>${labelGroup('pain-group-Ombro-Esq', 10, 60, 'Ombro Esq', 145, 85)}${labelGroup('pain-group-Biceps-Esq', 10, 90, 'Bíceps Esq', 142, 110)}${labelGroup('pain-group-Cotovelo-Esq', 10, 120, 'Cotovelo Esq', 145, 128)}${labelGroup('pain-group-Antebraco-Esq', 10, 150, 'Antebraço Esq', 140, 145)}${labelGroup('pain-group-Adutor-Esq', 10, 180, 'Adutor Esq', 168, 175)}${labelGroup('pain-group-Joelho-Esq', 10, 210, 'Joelho Esq', 163, 200)}${labelGroup('pain-group-Canela-Esq', 10, 240, 'Tibial Esq', 163, 225)}${labelGroup('pain-group-Tornozelo-Esq', 10, 270, 'Tornozelo Esq', 163, 243)}${labelGroup('pain-group-Ombro-Dir', 260, 60, 'Ombro Dir', 195, 85)}${labelGroup('pain-group-Biceps-Dir', 260, 90, 'Bíceps Dir', 198, 110)}${labelGroup('pain-group-Cotovelo-Dir', 260, 120, 'Cotovelo Dir', 195, 128)}${labelGroup('pain-group-Antebraco-Dir', 260, 150, 'Antebraço Dir', 200, 145)}${labelGroup('pain-group-Adutor-Dir', 260, 180, 'Adutor Dir', 172, 175)}${labelGroup('pain-group-Joelho-Dir', 260, 210, 'Joelho Dir', 177, 200)}${labelGroup('pain-group-Canela-Dir', 260, 240, 'Tibial Dir', 177, 225)}${labelGroup('pain-group-Tornozelo-Dir', 260, 270, 'Tornozelo Dir', 177, 243)}${labelGroup('pain-group-Peitoral', 135, 330, 'Peitoral', 170, 90)}${labelGroup('pain-group-Abdominal', 135, 360, 'Abdominal', 170, 130)}${labelGroup('pain-group-Quadriceps', 135, 390, 'Quadríceps', 165, 160)}</svg>`;
+                        else return `<svg width="340" height="420" viewBox="0 0 340 420" class="drop-shadow-lg mx-auto"><text x="170" y="20" class="fill-slate-500 font-bold text-xs uppercase text-center" text-anchor="middle">Vista Posterior</text><g transform="translate(100, 40) scale(0.7)"><circle cx="100" cy="30" r="15" class="body-silhouette" /><rect x="92" y="45" width="16" height="15" class="body-silhouette"/><path d="M70 60 L130 60 L120 110 L80 110 Z" class="body-silhouette"/><rect x="92" y="110" width="16" height="20" class="body-silhouette"/><rect x="55" y="80" width="20" height="35" rx="5" class="body-silhouette"/><rect x="125" y="80" width="20" height="35" rx="5" class="body-silhouette"/><path d="M80 130 Q90 130 100 130 Q110 130 120 130 Q125 145 120 160 L100 160 L80 160 Q75 145 80 130" class="body-silhouette"/><rect x="82" y="165" width="16" height="55" class="body-silhouette"/><rect x="102" y="165" width="16" height="55" class="body-silhouette"/><ellipse cx="90" cy="260" rx="8" ry="20" class="body-silhouette"/><ellipse cx="110" cy="260" rx="8" ry="20" class="body-silhouette"/><path d="M85 70 L95 70 L90 85 Z" fill="none" stroke="#475569" opacity="0.5"/><path d="M115 70 L105 70 L110 85 Z" fill="none" stroke="#475569" opacity="0.5"/></g>${labelGroup('pain-group-Triceps-Esq', 10, 60, 'Tríceps Esq', 142, 105)}${labelGroup('pain-group-Dorsal-Esq', 10, 90, 'Dorsal Esq', 155, 95)}${labelGroup('pain-group-Lombar-Esq', 10, 120, 'Lombar Esq', 165, 125)}${labelGroup('pain-group-Abdutor-Esq', 10, 150, 'Abdutor Esq', 150, 140)}${labelGroup('pain-group-Isquios-Esq', 10, 180, 'Isquios Esq', 160, 175)}${labelGroup('pain-group-Joelho-Post-Esq', 10, 210, 'Joelho Post E', 163, 200)}${labelGroup('pain-group-Panturrilha-Esq', 10, 240, 'Panturrilha E', 163, 222)}${labelGroup('pain-group-Triceps-Dir', 260, 60, 'Tríceps Dir', 198, 105)}${labelGroup('pain-group-Dorsal-Dir', 260, 90, 'Dorsal Dir', 185, 95)}${labelGroup('pain-group-Lombar-Dir', 260, 120, 'Lombar Dir', 175, 125)}${labelGroup('pain-group-Abdutor-Dir', 260, 150, 'Abdutor Dir', 190, 140)}${labelGroup('pain-group-Isquios-Dir', 260, 180, 'Isquios Dir', 180, 175)}${labelGroup('pain-group-Joelho-Post-Dir', 260, 210, 'Joelho Post D', 177, 200)}${labelGroup('pain-group-Panturrilha-Dir', 260, 240, 'Panturrilha D', 177, 222)}${labelGroup('pain-group-Cervical', 135, 330, 'Cervical', 170, 75)}${labelGroup('pain-group-Toracica', 135, 360, 'Torácica', 170, 100)}${labelGroup('pain-group-Gluteos', 135, 390, 'Glúteos', 170, 145)}</svg>`;
+                    }
+                }
+            }
+        };
+
+        window.App = App;
+        window.MockDB = MockDB;
+        document.addEventListener('DOMContentLoaded', () => { App.init(); });
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
