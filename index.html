@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -791,7 +790,8 @@
                 role: null, currentView: 'landing', bodyView: 'front', 
                 workoutStartTime: null, timerInterval: null, restTimerInterval: null, 
                 timerSeconds: 0, editingId: null, painPoints: [], 
-                currentDay: 'A', activeStudentId: null, workoutDayToExecute: 'A' 
+                currentDay: 'A', activeStudentId: null, workoutDayToExecute: 'A',
+                selectedWorkoutDate: new Date().toISOString().split('T')[0]
             },
             
             init: async () => {
@@ -865,8 +865,8 @@
                     }
                 });
                 
-                // Isos garante que a tela saia após 6 segundos (6000ms)
-                setTimeout(hideSplashScreen, 6000);
+                // Isso garante que a tela saia após 4 segundos (4000ms)
+                setTimeout(hideSplashScreen, 4000);
             },
             
             Actions: {
@@ -1412,8 +1412,16 @@
                         if (obs.trim() !== "") obs += " | ";
                         obs += "Detalhes: " + exerciseDetails.join(", ");
                     }
+                    
+                    // NOVO: Combina a data selecionada com a hora atual
+                    const selectedDateStr = App.state.selectedWorkoutDate; // Formato "YYYY-MM-DD"
+                    const now = new Date();
+                    // Cria um objeto Date com a data do input e a hora/minuto/segundo atuais
+                    const workoutDate = new Date(selectedDateStr);
+                    workoutDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                    
                     const workoutData = { 
-                        date: new Date(), 
+                        date: workoutDate, // USA A NOVA DATA
                         studentId: activeStudentId, 
                         day: day, 
                         duration: durationManual, 
@@ -1873,6 +1881,10 @@
                             <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Prontidão (PSR)</label><span class="text-2xl font-bold text-white" id="psr-display">8</span></div><input type="range" min="0" max="10" value="8" class="w-full h-3 rounded-lg cursor-pointer slider-psr" oninput="document.getElementById('psr-display').innerText=this.value"></div>
                             <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Dor (EVA)</label><span class="text-2xl font-bold text-white" id="eva-display">2</span></div><input type="range" min="0" max="10" value="2" class="w-full h-3 rounded-lg cursor-pointer slider-eva" oninput="document.getElementById('eva-display').innerText=this.value"></div>
                             <div class="glass-panel p-6 rounded-xl mb-8"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Localizar Dor</label><div class="bg-slate-800 rounded p-1 flex"><button id="btn-front" class="px-3 py-1 bg-slate-700 text-white rounded text-xs" onclick="App.switchBodyView('front')">Frente</button><button id="btn-back" class="px-3 py-1 text-slate-500 hover:text-white rounded text-xs" onclick="App.switchBodyView('back')">Costas</button></div></div><div class="flex justify-center mb-4" id="body-map-container">${App.Views.components.getBodySVG('front')}</div><div class="pt-3 min-h-[20px]" id="pain-list-container"><div id="selected-pain-list" class="flex flex-wrap gap-2 justify-center"></div></div></div>
+                            <div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-yellow-500">
+                                <label class="text-sm font-bold text-yellow-400 uppercase mb-2 block">Data do Treino</label>
+                                <input type="date" id="workout-date-select" class="input-sci text-lg py-3 bg-slate-900 border-slate-700 w-full text-center" value="${App.state.selectedWorkoutDate}" onchange="App.state.selectedWorkoutDate = this.value">
+                            </div>
                             <button onclick="App.startWorkout()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg text-lg">Iniciar Treino</button>
                         </div>`;
                 },
