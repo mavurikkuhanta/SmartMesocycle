@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartMesocycle v29.3 | Secure & Full View</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SmartMesocycle v30.0 | Seasons</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,15 +14,15 @@
     <!-- Ícones: FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tipografia: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tipografia: Inter (Sistema) & Outfit (Wrapped) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: { slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' }, scientific: { blue: '#3b82f6', green: '#10b981', red: '#ef4444', purple: '#8b5cf6' } },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], outfit: ['Outfit', 'sans-serif'] },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slow-pulse': 'slowPulse 4s infinite ease-in-out',
@@ -30,6 +30,11 @@
                         'mesh': 'mesh 8s infinite alternate ease-in-out',
                         'pulse-green': 'pulseGreen 0.5s ease-in-out',
                         'slide-up': 'slideUp 0.4s ease-out',
+                        'enter': 'slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pop': 'fadeInZoom 0.5s ease-out forwards',
+                        'gradient': 'gradient-x 3s ease infinite',
+                        'glow': 'pulse-glow 2s infinite',
+                        'bounce-slow': 'bounce 2s infinite'
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -38,6 +43,11 @@
                         slowPulse: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.6 } },
                         pulseGreen: { '0%, 100%': { borderColor: 'transparent' }, '50%': { borderColor: '#10b981' } },
                         slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        /* Wrapped Animations */
+                        slideInUp: { from: { transform: 'translateY(100%)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+                        fadeInZoom: { from: { opacity: '0', transform: 'scale(0.9)' }, to: { opacity: '1', transform: 'scale(1)' } },
+                        'gradient-x': { '0%, 100%': { 'background-position': '0% 50%' }, '50%': { 'background-position': '100% 50%' } },
+                        'pulse-glow': { '0%, 100%': { 'box-shadow': '0 0 20px rgba(59, 130, 246, 0.5)' }, '50%': { 'box-shadow': '0 0 40px rgba(59, 130, 246, 0.8)' } }
                     }
                 }
             }
@@ -56,7 +66,7 @@
         .fil2 {fill:#552F91;fill-rule:nonzero}
         .fil1 {fill:#7E3DFC;fill-rule:nonzero}
 
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; overscroll-behavior: none; }
         
         /* Utilitários de Interface Otimizados */
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
@@ -225,8 +235,12 @@
         /* NOVO: Estilo para linha de atendimento presencial */
         .presence-row { background-color: rgba(234, 179, 8, 0.05); } 
         .presence-badge { background-color: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
+
+        /* --- WRAPPED STYLES (NOVO) --- */
+        .text-huge { font-size: clamp(3rem, 10vw, 6rem); line-height: 0.9; letter-spacing: -0.05em; }
+        .text-neon-stroke { -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
+        .safe-pb { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
     </style>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
@@ -277,7 +291,7 @@
                 <i class="fa-solid fa-users-gear text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v29.3</span></h1>
+                <h1 class="text-lg font-bold text-white tracking-tight leading-none">SmartMesocycle <span class="text-blue-400 font-light">v30.0</span></h1>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold" id="header-subtitle">Acesso Seguro</p>
             </div>
         </div>
@@ -755,18 +769,25 @@
                 MockDB.data.workout_history = MockDB.data.workout_history.filter(h => h.id !== id);
             },
             
+            // Helper para Datas do Firestore
+            _getDateObj: (val) => {
+                if (val && typeof val.toDate === 'function') return val.toDate(); // Firestore Timestamp
+                if (val) return new Date(val); // String ou Date
+                return new Date();
+            },
+
             getHistory: (studentId) => {
-                return MockDB.data.workout_history.filter(h => h.studentId == studentId).sort((a,b) => new Date(b.date) - new Date(a.date));
+                return MockDB.data.workout_history
+                    .filter(h => h.studentId == studentId)
+                    .sort((a,b) => MockDB._getDateObj(b.date) - MockDB._getDateObj(a.date));
             }
         };
 
         // --- APP HELPERS ---
         const formatDate = (dateInput) => {
             try {
-                if (dateInput && typeof dateInput.toDate === 'function') {
-                    return dateInput.toDate().toLocaleDateString('pt-BR');
-                }
-                return new Date(dateInput).toLocaleDateString('pt-BR');
+                const d = MockDB._getDateObj(dateInput);
+                return d.toLocaleDateString('pt-BR');
             } catch (e) {
                 return 'Data Inválida';
             }
@@ -774,10 +795,8 @@
 
         const formatTime = (dateInput) => {
             try {
-                if (dateInput && typeof dateInput.toDate === 'function') {
-                    return dateInput.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                }
-                return new Date(dateInput).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                const d = MockDB._getDateObj(dateInput);
+                return d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             } catch (e) {
                 return '--:--';
             }
@@ -791,7 +810,13 @@
                 workoutStartTime: null, timerInterval: null, restTimerInterval: null, 
                 timerSeconds: 0, editingId: null, painPoints: [], 
                 currentDay: 'A', activeStudentId: null, workoutDayToExecute: 'A',
-                selectedWorkoutDate: new Date().toISOString().split('T')[0]
+                selectedWorkoutDate: new Date().toISOString().split('T')[0],
+                // WRAPPED STATE
+                pendingView: 'workout', 
+                wrappedData: null,
+                wrappedSlideIndex: 0,
+                // CHECKIN CACHE
+                checkinData: { psr: 8, eva: 2 } // Default values
             },
             
             init: async () => {
@@ -889,8 +914,10 @@
 
                 startCoachFlow: () => { document.getElementById('coach-login-modal').classList.add('active'); document.getElementById('coach-password').value = ''; document.getElementById('coach-password').focus(); },
                 
-                startStudentFlow: () => {
+                // ATUALIZADO: Aceita o 'target' para saber se vai pro treino ou wrapped
+                startStudentFlow: (target = 'workout') => {
                     App.state.role = 'student';
+                    App.state.pendingView = target;
                     App.Actions.clearLocalState();
                     App.navigate('student_login');
                 },
@@ -1001,7 +1028,13 @@
                             
                             if (success) {
                                 document.getElementById('student-login-modal').classList.remove('active');
-                                App.Actions.selectStudent(id); 
+                                
+                                // ATUALIZADO: Decide para onde ir com base no botão clicado
+                                if (App.state.pendingView === 'wrapped') {
+                                    App.Actions.prepareWrappedSelection(id); // NOVO FLUXO
+                                } else {
+                                    App.Actions.selectStudent(id); 
+                                }
                             } else {
                                 throw new Error("Falha ao baixar dados.");
                             }
@@ -1026,6 +1059,171 @@
                         App.navigate('student_checkin'); 
                         App.Actions.saveLocalState();
                     } else { App.navigate('prescription'); }
+                },
+
+                // --- LÓGICA DO WRAPPED / MEMÓRIAS (ATUALIZADA) ---
+                
+                // Passo 1: Preparar o Menu de Seleção de Datas
+                prepareWrappedSelection: (studentId) => {
+                    const history = MockDB.getHistory(studentId);
+                    if (!history || history.length === 0) {
+                        alert("Você precisa ter treinos registrados para ver suas memórias!");
+                        return App.navigate('landing');
+                    }
+                    App.state.activeStudentId = studentId;
+                    App.state.wrappedHistory = history; // Cache para usar depois
+                    App.navigate('wrapped_selection');
+                },
+
+                // Passo 2: Lançar o Wrapped com Filtro
+                launchWrapped: (filterType, filterValue) => {
+                    const history = App.state.wrappedHistory;
+                    const student = MockDB.getStudentById(App.state.activeStudentId);
+                    
+                    let filteredHistory = [];
+                    
+                    if (filterType === 'all') {
+                        filteredHistory = history;
+                    } else if (filterType === 'month') {
+                        // filterValue = "0" (Janeiro), "1" (Fevereiro)...
+                        filteredHistory = history.filter(h => {
+                            const d = MockDB._getDateObj(h.date);
+                            return d.getMonth() === parseInt(filterValue) && d.getFullYear() === new Date().getFullYear();
+                        });
+                    }
+
+                    if (filteredHistory.length === 0) {
+                        return alert("Nenhum treino encontrado neste período.");
+                    }
+
+                    // --- PROCESSAMENTO MATEMÁTICO (Igual à versão anterior) ---
+                    const totalTreinos = filteredHistory.length;
+                    const cargaTotal = filteredHistory.reduce((acc, cur) => acc + (parseInt(cur.internalLoad)||0), 0);
+                    
+                    let totalPSR = 0, countPSR = 0, totalEVA = 0, countEVA = 0, totalPSE = 0, countPSE = 0;
+                    const painFrequency = {};
+                    const timeDist = { 'Manhã': 0, 'Tarde': 0, 'Noite': 0 };
+
+                    filteredHistory.forEach(h => {
+                        if(h.psr !== undefined && h.psr !== null) { totalPSR += parseInt(h.psr); countPSR++; }
+                        if(h.eva !== undefined && h.eva !== null) { totalEVA += parseInt(h.eva); countEVA++; }
+                        if(h.pse !== undefined && h.pse !== null) { totalPSE += parseInt(h.pse); countPSE++; }
+                        if(h.pain && Array.isArray(h.pain)) { h.pain.forEach(p => { painFrequency[p] = (painFrequency[p] || 0) + 1; }); }
+                        const hour = MockDB._getDateObj(h.date).getHours();
+                        if (hour < 12) timeDist['Manhã']++; else if (hour < 18) timeDist['Tarde']++; else timeDist['Noite']++;
+                    });
+
+                    const avgPSR = countPSR > 0 ? (totalPSR / countPSR).toFixed(1) : "-";
+                    const avgEVA = countEVA > 0 ? (totalEVA / countEVA).toFixed(1) : "-";
+                    const avgPSE = countPSE > 0 ? (totalPSE / countPSE).toFixed(1) : "-";
+                    const topPain = Object.entries(painFrequency).sort((a,b) => b[1] - a[1])[0]?.[0] || "Sem dores!";
+                    
+                    const sortedTimes = Object.entries(timeDist).sort((a,b) => b[1] - a[1]);
+                    const topTime = sortedTimes[0][1] > 0 ? sortedTimes[0][0] : null;
+                    let timePersona = "Guerreiro(a) Aleatório(a)";
+                    if(topTime === 'Manhã') timePersona = "Early Bird ☀️";
+                    if(topTime === 'Tarde') timePersona = "Afternoon Hustler 🌤️";
+                    if(topTime === 'Noite') timePersona = "Night Owl 🌙";
+                    
+                    let energyBadge = "Equilibrado";
+                    if (avgPSE !== "-") {
+                        const pseVal = parseFloat(avgPSE);
+                        if (pseVal < 5) energyBadge = "Zen Master 🧘"; else if (pseVal < 8) energyBadge = "Focado(a) 🎯"; else energyBadge = "Modo Besta 🦍";
+                    }
+
+                    const exerciseCounts = {};
+                    filteredHistory.forEach(h => {
+                        const matches = (h.observations || "").match(/\[(.*?):/g);
+                        if (matches) {
+                            matches.forEach(m => {
+                                const name = m.replace('[', '').replace(':', '').trim();
+                                exerciseCounts[name] = (exerciseCounts[name] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    const topExercises = Object.entries(exerciseCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([name, count], index) => ({ name, count, rank: index + 1 }));
+
+                    let maxStreak = 0, currentStreak = 0, lastTime = 0;
+                    const sortedHistory = [...filteredHistory].sort((a,b) => MockDB._getDateObj(a.date) - MockDB._getDateObj(b.date));
+                    sortedHistory.forEach(h => {
+                        const time = MockDB._getDateObj(h.date).getTime();
+                        const diffDays = Math.floor((time - lastTime) / (1000 * 3600 * 24));
+                        if (diffDays === 1 || diffDays === 0) { if (diffDays === 1) currentStreak++; } else { currentStreak = 1; }
+                        if (currentStreak > maxStreak) maxStreak = currentStreak;
+                        lastTime = time;
+                    });
+
+                    App.state.wrappedData = {
+                        nome: student.name,
+                        totalTreinos,
+                        cargaTotal,
+                        maxStreak: maxStreak || 1,
+                        rawData: sortedHistory,
+                        topExercises, avgPSR, avgEVA, avgPSE, topPain, timePersona, energyBadge,
+                        periodLabel: filterType === 'all' ? 'Resumo Anual' : new Date(2024, filterValue, 1).toLocaleString('pt-BR', {month:'long'})
+                    };
+                    
+                    App.state.wrappedSlideIndex = 0;
+                    App.navigate('wrapped_view');
+                },
+
+                nextWrappedSlide: () => {
+                    const totalSlides = 6;
+                    if (App.state.wrappedSlideIndex < totalSlides - 1) {
+                        App.state.wrappedSlideIndex++;
+                        App.Views.renderWrapped(document.getElementById('app-content'));
+                    }
+                },
+
+                prevWrappedSlide: () => {
+                    if (App.state.wrappedSlideIndex > 0) {
+                        App.state.wrappedSlideIndex--;
+                        App.Views.renderWrapped(document.getElementById('app-content'));
+                    }
+                },
+                
+                // --- NOVAS FUNÇÕES DE PERSISTÊNCIA LOCAL (AUTO-SAVE) ---
+                saveTempWorkoutProgress: () => {
+                    const data = {};
+                    // Salva Checkboxes de Séries (Agora Inputs de Carga)
+                    document.querySelectorAll('input[type="number"][id^="load-ex-"]').forEach(el => {
+                        data[el.id] = el.value;
+                    });
+                    // Salva Inputs de Texto (Observações por Exercício)
+                    document.querySelectorAll('input[type="text"][id^="obs-ex-"]').forEach(el => {
+                        data[el.id] = el.value;
+                    });
+                    // Salva Slider PSE
+                    const pse = document.getElementById('slider-pse');
+                    if(pse) data['slider-pse'] = pse.value;
+                    // Salva Notas Gerais
+                    const notes = document.getElementById('workout-notes');
+                    if(notes) data['workout-notes'] = notes.value;
+
+                    localStorage.setItem('smartMeso_tempWorkoutData', JSON.stringify(data));
+                },
+
+                restoreTempWorkoutProgress: () => {
+                    const raw = localStorage.getItem('smartMeso_tempWorkoutData');
+                    if(!raw) return;
+                    try {
+                        const data = JSON.parse(raw);
+                        Object.keys(data).forEach(key => {
+                            const el = document.getElementById(key);
+                            if(el) {
+                                // Todos agora são inputs de valor, não checkbox
+                                el.value = data[key];
+                                if(key === 'slider-pse') {
+                                    const disp = document.getElementById('pse-display');
+                                    if(disp) disp.innerText = data[key];
+                                }
+                            }
+                        });
+                    } catch(e) { console.error("Erro ao restaurar progresso temporário", e); }
                 },
 
                 duplicateStudent: (id, event) => {
@@ -1384,6 +1582,12 @@
                     const selectedDay = document.getElementById('workout-day-select').value;
                     App.state.workoutDayToExecute = selectedDay;
                     App.state.workoutStartTime = new Date(); 
+                    
+                    // ATUALIZADO: Captura os valores de Check-in para salvar depois
+                    const psr = document.getElementById('slider-psr').value;
+                    const eva = document.getElementById('slider-eva').value;
+                    App.state.checkinData = { psr, eva };
+                    
                     App.Actions.saveLocalState();
                     App.navigate('student_workout'); 
                 },
@@ -1400,14 +1604,55 @@
                     const load = pse * durationManual;
                     const activeStudentId = App.state.activeStudentId;
                     const day = App.state.workoutDayToExecute;
+                    
+                    // Recupera dados de Checkin
+                    const { psr, eva } = App.state.checkinData || { psr: null, eva: null };
+
+                    // Lógica para recalcular qual é a semana atual para fins de comparação de carga
+                    const history = MockDB.getHistory(activeStudentId);
+                    const thisDayHistory = history.filter(h => h.day === day);
+                    const getWeekID = (dateInput) => {
+                        let d; try { d = (dateInput && typeof dateInput.toDate === 'function') ? dateInput.toDate() : new Date(dateInput); } catch(e) { d = new Date(); }
+                        d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const yearStart = new Date(d.getFullYear(),0,1);
+                        const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+                        return `${d.getFullYear()}-W${weekNo}`;
+                    };
+                    const currentWeekID = getWeekID(new Date());
+                    const previousWeeksSet = new Set();
+                    thisDayHistory.forEach(h => {
+                        const wID = getWeekID(h.date);
+                        if (wID !== currentWeekID) { previousWeeksSet.add(wID); }
+                    });
+                    const currentWeekIndex = previousWeeksSet.size % 4;
+
                     const exercises = MockDB.getPrescription(activeStudentId).filter(ex => (ex.day || 'A') === day);
                     let exerciseDetails = [];
+                    
                     exercises.forEach(ex => {
+                        const weekData = ex.weeks[currentWeekIndex] || ex.weeks[0];
+                        const sets = parseInt(weekData.s) || 1;
+                        const prescribedLoad = weekData.w || '';
+                        
+                        // Checa observações manuais
                         const input = document.getElementById(`obs-ex-${ex.id}`);
                         if(input && input.value.trim() !== "") {
-                            exerciseDetails.push(`[${ex.name}: ${input.value.trim()}]`);
+                            exerciseDetails.push(`[${ex.name} Obs: ${input.value.trim()}]`);
+                        }
+
+                        // Comparação: Carga Prescrita vs Realizada
+                        for(let i=0; i<sets; i++) {
+                            const loadInput = document.getElementById(`load-ex-${ex.id}-set-${i}`);
+                            if (loadInput) {
+                                const realized = loadInput.value;
+                                // Compara valores frouxamente (string vs number ok)
+                                if (realized != prescribedLoad) { 
+                                    exerciseDetails.push(`[${ex.name} S${i+1}: ${prescribedLoad}kg -> ${realized}kg]`);
+                                }
+                            }
                         }
                     });
+
                     if (exerciseDetails.length > 0) {
                         if (obs.trim() !== "") obs += " | ";
                         obs += "Detalhes: " + exerciseDetails.join(", ");
@@ -1425,12 +1670,18 @@
                         studentId: activeStudentId, 
                         day: day, 
                         duration: durationManual, 
-                        pse: parseInt(pse), 
+                        pse: parseInt(pse),
+                        psr: psr, // NOVO
+                        eva: eva, // NOVO
                         observations: obs, 
                         internalLoad: load, 
                         pain: App.state.painPoints 
                     };
                     MockDB.saveWorkout(workoutData);
+                    
+                    // LIMPA O STORAGE TEMPORÁRIO APÓS SALVAR
+                    localStorage.removeItem('smartMeso_tempWorkoutData');
+                    
                     App.tempSummary = workoutData;
                     App.Actions.clearLocalState();
                     App.state.workoutStartTime = null;
@@ -1457,6 +1708,8 @@
                     case 'student_checkin': App.Views.renderStudentCheckin(content); break;
                     case 'student_workout': App.Views.renderStudentWorkout(content); break;
                     case 'student_summary': App.Views.renderStudentSummary(content); break;
+                    case 'wrapped_selection': App.Views.renderWrappedSelection(content); break; // NOVA VIEW
+                    case 'wrapped_view': App.Views.renderWrapped(content); break;
                 }
             },
             
@@ -1479,33 +1732,289 @@
                 renderLanding: (container) => {
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full animate-fade-in pb-20">
-                            <div class="text-center mb-12">
+                            <div class="text-center mb-8">
                                 <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">
                                     Smart<span class="text-blue-500">Mesocycle</span>
                                 </h1>
                                 <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Powered by Alyson Felipe - CREF 03552 G/Pi</p>
                             </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-lg px-4">
-                                <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
-                                    <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                                        <i class="fa-solid fa-user-tie text-3xl text-blue-400"></i>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-lg px-4">
+                                <!-- Botão Treinador -->
+                                <div onclick="App.Actions.startCoachFlow()" class="glass-panel p-6 rounded-2xl flex flex-col items-center gap-3 cursor-pointer hover:bg-slate-800 hover:border-blue-500 transition-all group border border-slate-700">
+                                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                        <i class="fa-solid fa-user-tie text-2xl text-blue-400"></i>
                                     </div>
                                     <div class="text-center">
-                                        <h3 class="text-xl font-bold text-white mb-1">Sou Treinador</h3>
-                                        <p class="text-xs text-slate-500">Acesso Restrito</p>
+                                        <h3 class="text-lg font-bold text-white">Sou Treinador</h3>
+                                        <p class="text-[10px] text-slate-500 uppercase">Acesso Restrito</p>
                                     </div>
                                 </div>
                                 
-                                <div onclick="App.Actions.startStudentFlow()" class="glass-panel p-8 rounded-2xl flex flex-col items-center gap-4 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all group border border-slate-700">
-                                    <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                                        <i class="fa-solid fa-running text-3xl text-green-400"></i>
+                                <!-- Botão Aluno (Treino) -->
+                                <div onclick="App.Actions.startStudentFlow('workout')" class="glass-panel p-6 rounded-2xl flex flex-col items-center gap-3 cursor-pointer hover:bg-slate-800 hover:border-green-500 transition-all group border border-slate-700">
+                                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                        <i class="fa-solid fa-dumbbell text-2xl text-green-400"></i>
                                     </div>
                                     <div class="text-center">
-                                        <h3 class="text-xl font-bold text-white mb-1">Sou Aluno</h3>
-                                        <p class="text-xs text-slate-500">Acesso ao Treino</p>
+                                        <h3 class="text-lg font-bold text-white">Ir para o Treino</h3>
+                                        <p class="text-[10px] text-slate-500 uppercase">Iniciar Sessão</p>
                                     </div>
                                 </div>
+
+                                <!-- NOVO BOTÃO: WRAPPED / MEMÓRIAS -->
+                                <div onclick="App.Actions.startStudentFlow('wrapped')" class="col-span-1 md:col-span-2 glass-panel p-6 rounded-2xl flex items-center justify-center gap-4 cursor-pointer hover:bg-slate-900 hover:border-purple-500 transition-all group border border-slate-700 bg-gradient-to-r from-slate-900 to-slate-900/50">
+                                    <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg border border-purple-500/20">
+                                        <i class="fa-solid fa-bolt text-2xl text-purple-400 animate-pulse"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="text-lg font-bold text-white">Memórias de Treino</h3>
+                                        <p class="text-[10px] text-purple-300 uppercase font-bold tracking-widest">Wrapped 2026 • Ver Retrospectiva</p>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-slate-600 ml-auto group-hover:text-white transition-colors"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // --- VIEW: MENU DE SELEÇÃO DE ÉPOCAS (NOVO) ---
+                renderWrappedSelection: (container) => {
+                    const history = App.state.wrappedHistory || [];
+                    const student = MockDB.getStudentById(App.state.activeStudentId);
+
+                    // Extrair meses únicos
+                    const availableMonths = new Set();
+                    history.forEach(h => {
+                        const d = MockDB._getDateObj(h.date);
+                        // Salva como "Mês-Ano" para unicidade
+                        availableMonths.add(`${d.getMonth()}-${d.getFullYear()}`);
+                    });
+
+                    // Converter para array e ordenar
+                    const monthList = Array.from(availableMonths).map(str => {
+                        const [m, y] = str.split('-');
+                        return { month: parseInt(m), year: parseInt(y) };
+                    }).sort((a,b) => b.month - a.month); // Decrescente
+
+                    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+                    const listHTML = monthList.map(item => `
+                        <button onclick="App.Actions.launchWrapped('month', '${item.month}')" class="w-full py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-left px-6 flex items-center justify-between group transition-all mb-3">
+                            <div>
+                                <p class="text-white font-bold text-lg font-outfit">${monthNames[item.month]}</p>
+                                <p class="text-slate-500 text-xs font-mono uppercase tracking-widest">${item.year}</p>
+                            </div>
+                            <i class="fa-solid fa-play text-slate-600 group-hover:text-green-400 transition-colors"></i>
+                        </button>
+                    `).join('');
+
+                    container.innerHTML = `
+                        <div class="flex flex-col h-full bg-slate-950 p-6 animate-fade-in relative overflow-hidden">
+                            <div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+                            
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-2 mb-8">
+                                    <button onclick="App.Actions.goBackToLogin()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
+                                    <h2 class="text-xl font-black text-white uppercase tracking-tighter">Temporadas</h2>
+                                </div>
+
+                                <div class="text-center mb-8">
+                                    <div class="w-20 h-20 bg-slate-900 rounded-full mx-auto flex items-center justify-center border-2 border-slate-800 mb-4 shadow-xl">
+                                        <span class="text-2xl font-bold text-white">${student.img}</span>
+                                    </div>
+                                    <h1 class="text-2xl font-bold text-white font-outfit">Escolha o Período</h1>
+                                    <p class="text-slate-500 text-sm">Qual memória vamos desbloquear?</p>
+                                </div>
+
+                                <!-- Botão Ano Completo -->
+                                <button onclick="App.Actions.launchWrapped('all', 'all')" class="w-full py-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-left px-6 flex items-center justify-between group transition-transform active:scale-95 hover:shadow-lg hover:shadow-purple-500/20 mb-6 relative overflow-hidden">
+                                    <div class="relative z-10">
+                                        <p class="text-white font-black text-2xl font-outfit">RESUMO 2026</p>
+                                        <p class="text-white/70 text-xs font-mono uppercase tracking-widest">A Jornada Completa</p>
+                                    </div>
+                                    <div class="relative z-10 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-star text-white"></i>
+                                    </div>
+                                    <!-- Brilho fundo -->
+                                    <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </button>
+
+                                <div class="space-y-1 overflow-y-auto max-h-[40vh] pr-2 pb-20">
+                                    <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-3 pl-2">Por Mês</p>
+                                    ${listHTML.length > 0 ? listHTML : '<p class="text-slate-600 italic text-center py-4">Nenhum treino registrado ainda.</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // --- NOVA VIEW: WRAPPED (ATUALIZADA) ---
+                renderWrapped: (container) => {
+                    const data = App.state.wrappedData;
+                    const idx = App.state.wrappedSlideIndex;
+                    const slides = ['intro', 'wellness', 'volume', 'chart', 'streak', 'share']; 
+                    const currentId = slides[idx];
+                    
+                    const bgColors = {
+                        'intro': 'bg-black',
+                        'wellness': 'bg-teal-950',
+                        'volume': 'bg-indigo-950',
+                        'chart': 'bg-slate-900',
+                        'streak': 'bg-red-950',
+                        'share': 'bg-blue-950'
+                    };
+
+                    const funIntroPhrases = ["Você não treinou, você deu show! 🌟", "Protagonista demais.", "Main Character Energy.", "Sua era fitness chegou."];
+                    const randomIntro = funIntroPhrases[Math.floor(Math.random() * funIntroPhrases.length)];
+
+                    const funVolumePhrases = ["Isso é mais pesado que um Fusca! 🚗", "Equivale a carregar 50 pizzas gigantes. 🍕", "Haja energia para tudo isso! ⚡"];
+                    const randomVolume = funVolumePhrases[Math.floor(Math.random() * funVolumePhrases.length)];
+
+                    const footer = `<div class="absolute bottom-4 left-0 w-full text-center opacity-70 safe-pb"><p class="text-xs font-bold tracking-[0.3em] font-outfit text-slate-400">@pensandooef</p></div>`;
+                    const periodBadge = `<div class="absolute top-16 left-0 w-full text-center z-40"><span class="bg-white/10 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white border border-white/20">${data.periodLabel.toUpperCase()}</span></div>`;
+
+                    // Função auxiliar para cores de métricas
+                    const getMetricColor = (val, type) => {
+                        val = parseFloat(val);
+                        if (isNaN(val)) return "text-white";
+                        if (type === 'psr') return val >= 7 ? "text-green-400" : (val >= 4 ? "text-yellow-400" : "text-red-400");
+                        if (type === 'eva') return val <= 3 ? "text-green-400" : (val <= 6 ? "text-yellow-400" : "text-red-400");
+                        if (type === 'pse') return val >= 7 ? "text-purple-400" : "text-blue-400";
+                        return "text-white";
+                    };
+
+                    const templates = {
+                        'intro': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-6 animate-enter relative">
+                                ${periodBadge}
+                                <h1 class="text-huge font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 mb-4 animate-gradient font-outfit">OLÁ, <br/>${data.nome.split(' ')[0].toUpperCase()}</h1>
+                                <p class="text-2xl text-slate-400 font-light font-outfit italic">"${randomIntro}"</p>
+                                <div class="mt-12 w-32 h-1 bg-white rounded-full opacity-20"></div>
+                                <p class="mt-4 text-xs font-bold tracking-[0.3em] text-slate-500 uppercase">SmartMesocycle Wrapped</p>
+                                ${footer}
+                            </div>`,
+                        'wellness': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-6 animate-enter relative">
+                                ${periodBadge}
+                                <h2 class="text-4xl font-black text-white mb-8 font-outfit">CORPO & <br/><span class="text-teal-400">MENTE</span></h2>
+                                <div class="grid grid-cols-2 gap-4 w-full">
+                                    <div class="bg-slate-900/50 p-4 rounded-2xl backdrop-blur-sm border border-slate-700">
+                                        <p class="text-[10px] uppercase font-bold text-slate-400">Média PSR</p>
+                                        <p class="text-4xl font-black ${getMetricColor(data.avgPSR, 'psr')} font-outfit">${data.avgPSR}</p>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-4 rounded-2xl backdrop-blur-sm border border-slate-700">
+                                        <p class="text-[10px] uppercase font-bold text-slate-400">Média Dor (EVA)</p>
+                                        <p class="text-4xl font-black ${getMetricColor(data.avgEVA, 'eva')} font-outfit">${data.avgEVA}</p>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-4 rounded-2xl backdrop-blur-sm border border-slate-700 col-span-2">
+                                        <p class="text-[10px] uppercase font-bold text-slate-400">Intensidade Média (PSE)</p>
+                                        <p class="text-3xl font-black ${getMetricColor(data.avgPSE, 'pse')} font-outfit">${data.avgPSE} - ${data.energyBadge}</p>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-4 rounded-2xl backdrop-blur-sm border border-slate-700 col-span-2">
+                                        <p class="text-[10px] uppercase font-bold text-slate-400">Seu Perfil</p>
+                                        <p class="text-xl font-bold text-white font-outfit">${data.timePersona}</p>
+                                    </div>
+                                </div>
+                                ${footer}
+                            </div>`,
+                        'volume': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-6 animate-enter relative">
+                                ${periodBadge}
+                                <div class="mb-8 animate-bounce-slow text-yellow-400 text-6xl"><i class="fa-solid fa-bolt"></i></div>
+                                <p class="text-xl font-bold text-indigo-300 uppercase tracking-widest mb-2 font-outfit">XP DE TREINO (UA)</p>
+                                <h2 class="text-huge font-black text-white leading-none mb-6 font-outfit">${data.cargaTotal.toLocaleString()}</h2>
+                                <p class="text-xl text-indigo-200 font-medium max-w-xs mx-auto font-outfit bg-indigo-900/50 p-4 rounded-xl border border-indigo-500/30">${randomVolume}</p>
+                                ${footer}
+                            </div>`,
+                        'chart': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-4 animate-enter relative">
+                                ${periodBadge}
+                                <h2 class="text-4xl font-black text-white mb-8 uppercase font-outfit">TOP 5<br/><span class="text-purple-400">HITS DO MÊS</span></h2>
+                                <div class="w-full space-y-4">
+                                    ${data.topExercises.length > 0 ? 
+                                        data.topExercises.map((ex, i) => `
+                                            <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700 backdrop-blur-sm">
+                                                <span class="text-3xl font-black text-purple-500 font-outfit w-8 text-center">${i + 1}</span>
+                                                <span class="text-xl font-bold text-white font-outfit truncate text-left flex-1">${ex.name}</span>
+                                                <span class="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-1 rounded">${ex.count}x</span>
+                                            </div>
+                                        `).join('') 
+                                        : '<p class="text-slate-500 italic">Sem dados suficientes para o ranking.</p>'}
+                                </div>
+                                ${footer}
+                            </div>`,
+                        'streak': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-6 animate-enter relative">
+                                ${periodBadge}
+                                <div class="animate-glow mb-6 text-red-500 text-6xl"><i class="fa-solid fa-fire"></i></div>
+                                <h2 class="text-6xl font-black text-red-500 mb-2 font-outfit">${data.maxStreak} DIAS</h2>
+                                <h3 class="text-3xl font-bold text-white uppercase tracking-widest mb-8 font-outfit">Seguidos (On Fire!)</h3>
+                                <p class="text-lg text-red-200 font-light italic">"Nem o fim de semana te parou."</p>
+                                ${footer}
+                            </div>`,
+                        'share': `
+                            <div class="flex flex-col items-center justify-center h-full text-center px-6 animate-enter relative">
+                                ${periodBadge}
+                                <h2 class="text-4xl font-black text-white mb-8 font-outfit leading-none">VOCÊ ZEROU<br/><span class="text-green-400">O GAME</span></h2>
+                                <div class="bg-slate-900 border-4 border-slate-800 p-8 rounded-[2rem] shadow-2xl w-full max-w-sm rotate-3 transform transition hover:rotate-0">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <div class="text-left">
+                                            <p class="text-xs text-slate-500 font-bold uppercase">Line-Up</p>
+                                            <p class="text-xl font-bold text-white">${data.nome}</p>
+                                        </div>
+                                        <div class="text-2xl">🔥</div>
+                                    </div>
+                                    <div class="space-y-3 text-left">
+                                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                                            <span class="text-slate-400 text-sm font-outfit">Sessões</span>
+                                            <span class="text-white font-bold font-outfit">${data.totalTreinos}</span>
+                                        </div>
+                                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                                            <span class="text-slate-400 text-sm font-outfit">XP Total</span>
+                                            <span class="text-white font-bold font-outfit">${(data.cargaTotal/1000).toFixed(1)}k</span>
+                                        </div>
+                                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                                            <span class="text-slate-400 text-sm font-outfit">Maior Combo</span>
+                                            <span class="text-white font-bold font-outfit">${data.maxStreak} Dias</span>
+                                        </div>
+                                        <div class="pt-2">
+                                            <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Favorito</span>
+                                            <span class="text-purple-400 font-bold font-outfit text-lg truncate block">${data.topExercises[0]?.name || "Misterioso"}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 text-center">
+                                        <p class="text-xs uppercase font-bold tracking-[0.2em] text-slate-500 font-outfit">@pensandooef</p>
+                                    </div>
+                                </div>
+                                <div class="mt-10 flex flex-col gap-3 w-full">
+                                    <button onclick="App.Actions.prepareWrappedSelection(App.state.activeStudentId)" class="px-8 py-3 bg-white text-black font-black rounded-full hover:scale-105 transition-transform w-full shadow-lg shadow-white/20">VER OUTRO PERÍODO</button>
+                                    <button onclick="App.Actions.logout()" class="px-8 py-3 bg-slate-800/50 text-slate-400 font-bold rounded-full hover:bg-slate-800 transition-colors w-full text-xs uppercase tracking-widest">Sair</button>
+                                </div>
+                            </div>`
+                    };
+
+                    container.innerHTML = `
+                        <div class="fixed inset-0 z-50 ${bgColors[currentId]} transition-colors duration-700 flex flex-col">
+                            <!-- Barra de Progresso -->
+                            <div class="absolute top-0 left-0 w-full p-2 z-50 flex gap-1 pt-6 pr-12">
+                                ${slides.map((s, i) => `<div class="h-1 flex-1 bg-white/20 rounded-full overflow-hidden"><div class="h-full bg-white transition-all duration-300 ${i <= idx ? 'w-full' : 'w-0'}"></div></div>`).join('')}
+                            </div>
+                            
+                            <!-- Botão Fechar (X) -->
+                            <button onclick="App.Actions.prepareWrappedSelection(App.state.activeStudentId)" class="absolute top-4 right-4 z-[60] w-8 h-8 flex items-center justify-center bg-black/20 backdrop-blur rounded-full text-white/70 hover:text-white transition-colors">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                            
+                            <!-- Áreas de Toque -->
+                            <div class="absolute inset-0 z-40 flex">
+                                <div class="w-1/3 h-full" onclick="App.Actions.prevWrappedSlide()"></div>
+                                <div class="w-2/3 h-full" onclick="App.Actions.nextWrappedSlide()"></div>
+                            </div>
+
+                            <!-- Conteúdo -->
+                            <div class="h-full w-full pt-12 pb-8 relative z-30 flex flex-col">
+                                ${templates[currentId]}
                             </div>
                         </div>
                     `;
@@ -1878,8 +2387,8 @@
                             <div class="glass-panel p-4 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-slate-400 uppercase">Frequência Mensal</span><span class="text-xs text-green-400 font-bold">${history.length} Treinos</span></div><div class="calendar-grid">${calendarHTML}</div>${balanceHTML}</div>
                             <div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-blue-500"><label class="text-sm font-bold text-blue-400 uppercase mb-2 block">Qual treino hoje?</label><select id="workout-day-select" class="input-sci text-lg py-3 bg-slate-900 border-slate-700">${options.map(o => `<option value="${o}">Treino ${o}</option>`).join('')}</select></div>
                             ${messageHTML}
-                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Prontidão (PSR)</label><span class="text-2xl font-bold text-white" id="psr-display">8</span></div><input type="range" min="0" max="10" value="8" class="w-full h-3 rounded-lg cursor-pointer slider-psr" oninput="document.getElementById('psr-display').innerText=this.value"></div>
-                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Dor (EVA)</label><span class="text-2xl font-bold text-white" id="eva-display">2</span></div><input type="range" min="0" max="10" value="2" class="w-full h-3 rounded-lg cursor-pointer slider-eva" oninput="document.getElementById('eva-display').innerText=this.value"></div>
+                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Prontidão (PSR)</label><span class="text-2xl font-bold text-white" id="psr-display">8</span></div><input type="range" min="0" max="10" value="8" class="w-full h-3 rounded-lg cursor-pointer slider-psr" id="slider-psr" oninput="document.getElementById('psr-display').innerText=this.value"></div>
+                            <div class="glass-panel p-6 rounded-xl mb-6"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Dor (EVA)</label><span class="text-2xl font-bold text-white" id="eva-display">2</span></div><input type="range" min="0" max="10" value="2" class="w-full h-3 rounded-lg cursor-pointer slider-eva" id="slider-eva" oninput="document.getElementById('eva-display').innerText=this.value"></div>
                             <div class="glass-panel p-6 rounded-xl mb-8"><div class="flex justify-between items-center mb-4"><label class="text-sm font-bold text-white">Localizar Dor</label><div class="bg-slate-800 rounded p-1 flex"><button id="btn-front" class="px-3 py-1 bg-slate-700 text-white rounded text-xs" onclick="App.switchBodyView('front')">Frente</button><button id="btn-back" class="px-3 py-1 text-slate-500 hover:text-white rounded text-xs" onclick="App.switchBodyView('back')">Costas</button></div></div><div class="flex justify-center mb-4" id="body-map-container">${App.Views.components.getBodySVG('front')}</div><div class="pt-3 min-h-[20px]" id="pain-list-container"><div id="selected-pain-list" class="flex flex-wrap gap-2 justify-center"></div></div></div>
                             <div class="glass-panel p-6 rounded-xl mb-6 border-l-4 border-l-yellow-500">
                                 <label class="text-sm font-bold text-yellow-400 uppercase mb-2 block">Data do Treino</label>
@@ -1941,18 +2450,20 @@
                                     ${ex.cadence ? `<span class="text-[10px] font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-mono whitespace-nowrap" title="Cadência">${ex.cadence}</span>` : ''}
                                 </div>
                                 ${ex.notes ? `<div class="text-xs text-slate-400 italic mb-3 bg-slate-800/30 p-2 rounded border border-slate-700/30"><i class="fa-solid fa-info-circle mr-1 text-blue-500"></i> ${ex.notes}</div>` : ''}
-                                <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider"><div>Séries</div><div>Carga</div><div>Reps</div><div>Feito</div></div>
+                                <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider"><div>Séries</div><div>Carga (P)</div><div>Reps</div><div>Realizado</div></div>
                                 <div class="space-y-2">
                                     ${Array.from({length: sets}).map((_, i) => `
                                     <div class="grid grid-cols-4 gap-2 items-center bg-slate-800/40 p-2 rounded border border-slate-700/30">
                                         <div class="text-white font-bold text-center">${i + 1}</div>
                                         <div class="text-blue-300 font-mono font-bold text-center text-sm">${weekData.w || '-'}</div>
                                         <div class="text-white font-mono text-center text-sm">${weekData.r || '-'}</div>
-                                        <div class="flex justify-center"><input type="checkbox" class="custom-checkbox text-green-500"></div>
+                                        <div class="flex justify-center">
+                                            <input type="number" id="load-ex-${ex.id}-set-${i}" value="${weekData.w || ''}" oninput="App.Actions.saveTempWorkoutProgress()" class="input-sci text-center text-green-400 font-bold p-1 bg-slate-900/50 border-green-500/30 h-8 w-full">
+                                        </div>
                                     </div>`).join('')}
                                 </div>
                                 <div class="mt-3 pt-3 border-t border-slate-700/50">
-                                    <input type="text" id="obs-ex-${ex.id}" class="w-full bg-slate-900 border border-slate-700 rounded text-xs p-2.5 text-slate-300 focus:border-blue-500 outline-none transition-colors" placeholder="Usou a carga proposta?">
+                                    <input type="text" id="obs-ex-${ex.id}" oninput="App.Actions.saveTempWorkoutProgress()" class="w-full bg-slate-900 border border-slate-700 rounded text-xs p-2.5 text-slate-300 focus:border-blue-500 outline-none transition-colors" placeholder="Alguma observação extra?">
                                 </div>
                             </div>`
                         }).join('') : `<div class="p-8 text-center text-slate-500 bg-slate-800 rounded-xl border border-slate-700 dashed border-2">Nenhum exercício cadastrado para o Treino ${day}.</div>`}
@@ -1960,7 +2471,15 @@
                         <div class="glass-panel p-6 rounded-xl mt-8 border border-slate-700">
                             <h4 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i> Feedback da Sessão</h4>
                             <div class="flex justify-between items-center mb-2"><span class="text-xs text-slate-400 uppercase font-bold">PSE (0-10)</span><span class="text-2xl font-bold text-white" id="pse-display">5</span></div>
-                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value"><label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Notas Gerais</label><textarea id="workout-notes" class="input-sci w-full h-24 resize-none bg-slate-900 border-slate-700 focus:border-blue-500" placeholder="Como você se sentiu hoje?"></textarea></div><button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8 transition-transform active:scale-95 flex items-center justify-center gap-2"><i class="fa-solid fa-flag-checkered"></i> Finalizar Treino</button></div>`;
+                            <input type="range" min="0" max="10" value="5" id="slider-pse" class="w-full h-3 rounded-lg cursor-pointer slider-pse mb-6" oninput="document.getElementById('pse-display').innerText=this.value; App.Actions.saveTempWorkoutProgress()">
+                            <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Notas Gerais</label>
+                            <textarea id="workout-notes" oninput="App.Actions.saveTempWorkoutProgress()" class="input-sci w-full h-24 resize-none bg-slate-900 border-slate-700 focus:border-blue-500" placeholder="Como você se sentiu hoje?"></textarea>
+                        </div>
+                        <button onclick="App.finishWorkout()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-bold rounded-xl mt-6 shadow-lg mb-8 transition-transform active:scale-95 flex items-center justify-center gap-2"><i class="fa-solid fa-flag-checkered"></i> Finalizar Treino</button>
+                    </div>`;
+                    
+                    // CHAMA A RESTAURAÇÃO AUTOMÁTICA APÓS RENDERIZAR
+                    setTimeout(() => App.Actions.restoreTempWorkoutProgress(), 100);
                 },
                 renderStudentSummary: (container) => {
                     const data = App.tempSummary;
