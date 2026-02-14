@@ -2153,7 +2153,7 @@
                     const history = MockDB.getHistory(activeStudent.id);
                     
                     // --- GRÁFICO PREP ---
-                    const historySorted = [...history].sort((a,b) => new Date(a.date) - new Date(b.date));
+                    const historySorted = [...history].sort((a,b) => MockDB._getDateObj(a.date) - MockDB._getDateObj(b.date));
                     const chartLabels = historySorted.map(h => formatDate(h.date).substring(0, 5)); // dd/mm
                     const dataLoad = historySorted.map(h => h.internalLoad);
                     const dataPSE = historySorted.map(h => h.pse);
