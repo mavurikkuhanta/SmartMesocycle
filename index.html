@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartMesocycle v30.0 | Seasons</title>
+    <title>SmartMesocycle v30.1 | Analytics</title>
     
     <!-- Design System: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -240,7 +240,51 @@
         .text-huge { font-size: clamp(3rem, 10vw, 6rem); line-height: 0.9; letter-spacing: -0.05em; }
         .text-neon-stroke { -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
         .safe-pb { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+
+        /* ================================================================= */
+        /* --- OTIMIZAÇÃO CRÍTICA PARA SAFARI/MOBILE (WEBKIT) - v30.1 --- */
+        /* ================================================================= */
+        
+        /* Detecta dispositivos touch ou telas menores para desligar efeitos pesados */
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            .glass-panel {
+                /* 1. Desliga o desfoque em tempo real que mata a CPU do iPhone */
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                
+                /* 2. Usa um fundo mais sólido para manter o contraste sem o custo do blur */
+                background: rgba(15, 23, 42, 0.96) !important;
+                border: 1px solid rgba(51, 65, 85, 0.5);
+                box-shadow: none !important;
+            }
+            
+            /* 3. Remove sombras pesadas que causam lag no scroll */
+            .shadow-2xl, .shadow-xl, .shadow-lg {
+                box-shadow: none !important;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+
+            /* 4. Reduz a complexidade das bolhas de fundo (Blobs) */
+            .glow-blob {
+                opacity: 0.2 !important;
+                filter: blur(40px) !important; /* Blur menor é mais rápido */
+                animation: none !important; /* Desliga animação de fundo se estiver muito lento */
+            }
+            
+            /* 5. Dicas de Otimização para Animações Essenciais */
+            .animate-float, .animate-mesh {
+                will-change: transform; /* Dica para o navegador usar GPU */
+            }
+        }
+        
+        /* Força aceleração de hardware globalmente em elementos animados (Evita repaints) */
+        .animate-fade-in, .animate-slide-up, .animate-enter, .animate-pop {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
     </style>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
@@ -403,7 +447,9 @@
             <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
                 <i class="fa-solid fa-flag-checkered text-blue-500"></i> Finalizar Sessão
             </h3>
-            <p class="text-slate-300 text-sm mb-4">Confirme os dados antes de salvar:</p>
+            <p class="text-slate-300 text-sm mb-4">
+                Confirme os dados antes de salvar.<br>Não esqueceu nenhum exercício?
+            </p>
             
             <div class="mb-6 space-y-3">
                  <!-- NOVO: Campo de Duração Manual -->
@@ -1189,9 +1235,13 @@
                 // --- NOVAS FUNÇÕES DE PERSISTÊNCIA LOCAL (AUTO-SAVE) ---
                 saveTempWorkoutProgress: () => {
                     const data = {};
-                    // Salva Checkboxes de Séries (Agora Inputs de Carga)
+                    // Salva Inputs de Carga
                     document.querySelectorAll('input[type="number"][id^="load-ex-"]').forEach(el => {
                         data[el.id] = el.value;
+                    });
+                     // Salva Checkboxes de 'Feito'
+                    document.querySelectorAll('input[type="checkbox"][id^="check-ex-"]').forEach(el => {
+                        data[el.id] = el.checked;
                     });
                     // Salva Inputs de Texto (Observações por Exercício)
                     document.querySelectorAll('input[type="text"][id^="obs-ex-"]').forEach(el => {
@@ -1215,8 +1265,12 @@
                         Object.keys(data).forEach(key => {
                             const el = document.getElementById(key);
                             if(el) {
-                                // Todos agora são inputs de valor, não checkbox
-                                el.value = data[key];
+                                if (el.type === 'checkbox') {
+                                    el.checked = data[key];
+                                } else {
+                                    el.value = data[key];
+                                }
+                                
                                 if(key === 'slider-pse') {
                                     const disp = document.getElementById('pse-display');
                                     if(disp) disp.innerText = data[key];
@@ -1605,10 +1659,8 @@
                     const activeStudentId = App.state.activeStudentId;
                     const day = App.state.workoutDayToExecute;
                     
-                    // Recupera dados de Checkin
                     const { psr, eva } = App.state.checkinData || { psr: null, eva: null };
-
-                    // Lógica para recalcular qual é a semana atual para fins de comparação de carga
+                    
                     const history = MockDB.getHistory(activeStudentId);
                     const thisDayHistory = history.filter(h => h.day === day);
                     const getWeekID = (dateInput) => {
@@ -1630,26 +1682,25 @@
                     let exerciseDetails = [];
                     
                     exercises.forEach(ex => {
-                        const weekData = ex.weeks[currentWeekIndex] || ex.weeks[0];
-                        const sets = parseInt(weekData.s) || 1;
-                        const prescribedLoad = weekData.w || '';
+                        const sets = parseInt((ex.weeks[currentWeekIndex] || ex.weeks[0]).s) || 1;
                         
-                        // Checa observações manuais
                         const input = document.getElementById(`obs-ex-${ex.id}`);
                         if(input && input.value.trim() !== "") {
                             exerciseDetails.push(`[${ex.name} Obs: ${input.value.trim()}]`);
                         }
 
-                        // Comparação: Carga Prescrita vs Realizada
+                        let setsDoneDetails = [];
                         for(let i=0; i<sets; i++) {
-                            const loadInput = document.getElementById(`load-ex-${ex.id}-set-${i}`);
-                            if (loadInput) {
-                                const realized = loadInput.value;
-                                // Compara valores frouxamente (string vs number ok)
-                                if (realized != prescribedLoad) { 
-                                    exerciseDetails.push(`[${ex.name} S${i+1}: ${prescribedLoad}kg -> ${realized}kg]`);
-                                }
+                            const checkInput = document.getElementById(`check-ex-${ex.id}-set-${i}`);
+                            if (checkInput && checkInput.checked) {
+                                const loadInput = document.getElementById(`load-ex-${ex.id}-set-${i}`);
+                                const realizedLoad = loadInput ? loadInput.value : (ex.weeks[currentWeekIndex] || ex.weeks[0]).w;
+                                setsDoneDetails.push(`S${i+1}: ${realizedLoad || '0'}kg`);
                             }
+                        }
+                        
+                        if(setsDoneDetails.length > 0) {
+                            exerciseDetails.push(`[${ex.name}: ${setsDoneDetails.join(' | ')}]`);
                         }
                     });
 
@@ -1658,28 +1709,25 @@
                         obs += "Detalhes: " + exerciseDetails.join(", ");
                     }
                     
-                    // NOVO: Combina a data selecionada com a hora atual
-                    const selectedDateStr = App.state.selectedWorkoutDate; // Formato "YYYY-MM-DD"
+                    const selectedDateStr = App.state.selectedWorkoutDate;
                     const now = new Date();
-                    // Cria um objeto Date com a data do input e a hora/minuto/segundo atuais
                     const workoutDate = new Date(selectedDateStr);
                     workoutDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
                     
                     const workoutData = { 
-                        date: workoutDate, // USA A NOVA DATA
+                        date: workoutDate, 
                         studentId: activeStudentId, 
                         day: day, 
                         duration: durationManual, 
                         pse: parseInt(pse),
-                        psr: psr, // NOVO
-                        eva: eva, // NOVO
+                        psr: psr,
+                        eva: eva,
                         observations: obs, 
                         internalLoad: load, 
                         pain: App.state.painPoints 
                     };
                     MockDB.saveWorkout(workoutData);
                     
-                    // LIMPA O STORAGE TEMPORÁRIO APÓS SALVAR
                     localStorage.removeItem('smartMeso_tempWorkoutData');
                     
                     App.tempSummary = workoutData;
@@ -2104,6 +2152,13 @@
                     
                     const history = MockDB.getHistory(activeStudent.id);
                     
+                    // --- GRÁFICO PREP ---
+                    const historySorted = [...history].sort((a,b) => new Date(a.date) - new Date(b.date));
+                    const chartLabels = historySorted.map(h => formatDate(h.date).substring(0, 5)); // dd/mm
+                    const dataLoad = historySorted.map(h => h.internalLoad);
+                    const dataPSE = historySorted.map(h => h.pse);
+                    // -------------------
+
                     const rows = history.map(h => {
                         const date = formatDate(h.date);
                         const time = formatTime(h.date);
@@ -2134,7 +2189,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">${activeStudent.img}</div>
                                 <div>
-                                    <h2 class="text-xl font-bold text-white">Histórico</h2>
+                                    <h2 class="text-xl font-bold text-white">Histórico e Evolução</h2>
                                     <p class="text-xs text-slate-400">Aluno: ${activeStudent.name}</p>
                                 </div>
                             </div>
@@ -2142,6 +2197,12 @@
                                 <i class="fa-solid fa-file-csv"></i> Exportar (CSV)
                             </button>
                         </div>
+                        
+                        <!-- ÁREA DO GRÁFICO (NOVO) -->
+                        <div class="h-64 w-full mb-8 relative">
+                            <canvas id="loadChart"></canvas>
+                        </div>
+
                         <div class="overflow-x-auto rounded-lg border border-slate-700">
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
@@ -2161,6 +2222,81 @@
                             </table>
                         </div>
                     </div>`;
+
+                    // --- INICIALIZAÇÃO DO GRÁFICO ---
+                    if (history.length > 0) {
+                        setTimeout(() => {
+                            const ctx = document.getElementById('loadChart');
+                            if(ctx) {
+                                // Se já existir um gráfico, o ideal seria destruir, mas como recriamos o DOM, é seguro criar um novo.
+                                new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: chartLabels,
+                                        datasets: [
+                                            {
+                                                label: 'Carga Interna (UA)',
+                                                data: dataLoad,
+                                                borderColor: '#3b82f6', // blue-500
+                                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                                yAxisID: 'y',
+                                                fill: true,
+                                                tension: 0.3,
+                                                pointRadius: 4,
+                                                pointBackgroundColor: '#3b82f6'
+                                            },
+                                            {
+                                                label: 'Intensidade (PSE)',
+                                                data: dataPSE,
+                                                borderColor: '#ef4444', // red-500
+                                                backgroundColor: 'transparent',
+                                                borderDash: [5, 5],
+                                                yAxisID: 'y1',
+                                                tension: 0.1,
+                                                pointStyle: 'circle',
+                                                pointRadius: 4,
+                                                pointBackgroundColor: '#ef4444'
+                                            }
+                                        ]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        interaction: { mode: 'index', intersect: false },
+                                        plugins: {
+                                            legend: { labels: { color: '#94a3b8', font: {family: "'Inter', sans-serif", size: 11} } },
+                                            tooltip: {
+                                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                                titleColor: '#e2e8f0',
+                                                bodyColor: '#cbd5e1',
+                                                borderColor: 'rgba(51, 65, 85, 0.5)',
+                                                borderWidth: 1
+                                            }
+                                        },
+                                        scales: {
+                                            x: { 
+                                                ticks: { color: '#64748b', font: {size: 10} }, 
+                                                grid: { color: '#334155', drawBorder: false } 
+                                            },
+                                            y: { 
+                                                type: 'linear', display: true, position: 'left', 
+                                                ticks: { color: '#3b82f6', font: {size: 10} }, 
+                                                grid: { color: 'rgba(51, 65, 85, 0.3)', drawBorder: false },
+                                                title: { display: true, text: 'Volume (UA)', color: '#3b82f6', font: {size: 9, weight: 'bold'} }
+                                            },
+                                            y1: { 
+                                                type: 'linear', display: true, position: 'right', 
+                                                ticks: { color: '#ef4444', font: {size: 10}, stepSize: 1 }, 
+                                                grid: { drawOnChartArea: false },
+                                                min: 0, max: 10,
+                                                title: { display: true, text: 'PSE (0-10)', color: '#ef4444', font: {size: 9, weight: 'bold'} }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }, 50); // Timeout pequeno para garantir que o DOM renderizou
+                    }
                 },
 
                 renderPrescription: (container) => {
@@ -2450,15 +2586,18 @@
                                     ${ex.cadence ? `<span class="text-[10px] font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-mono whitespace-nowrap" title="Cadência">${ex.cadence}</span>` : ''}
                                 </div>
                                 ${ex.notes ? `<div class="text-xs text-slate-400 italic mb-3 bg-slate-800/30 p-2 rounded border border-slate-700/30"><i class="fa-solid fa-info-circle mr-1 text-blue-500"></i> ${ex.notes}</div>` : ''}
-                                <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider"><div>Séries</div><div>Carga (P)</div><div>Reps</div><div>Realizado</div></div>
+                                <div class="grid grid-cols-5 gap-2 text-center text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider"><div>Séries</div><div>Carga (P)</div><div>Reps</div><div>Realizado</div><div>Feito</div></div>
                                 <div class="space-y-2">
                                     ${Array.from({length: sets}).map((_, i) => `
-                                    <div class="grid grid-cols-4 gap-2 items-center bg-slate-800/40 p-2 rounded border border-slate-700/30">
+                                    <div class="grid grid-cols-5 gap-2 items-center bg-slate-800/40 p-2 rounded border border-slate-700/30">
                                         <div class="text-white font-bold text-center">${i + 1}</div>
                                         <div class="text-blue-300 font-mono font-bold text-center text-sm">${weekData.w || '-'}</div>
                                         <div class="text-white font-mono text-center text-sm">${weekData.r || '-'}</div>
                                         <div class="flex justify-center">
                                             <input type="number" id="load-ex-${ex.id}-set-${i}" value="${weekData.w || ''}" oninput="App.Actions.saveTempWorkoutProgress()" class="input-sci text-center text-green-400 font-bold p-1 bg-slate-900/50 border-green-500/30 h-8 w-full">
+                                        </div>
+                                        <div class="flex justify-center">
+                                            <input type="checkbox" id="check-ex-${ex.id}-set-${i}" onchange="App.Actions.saveTempWorkoutProgress()" class="custom-checkbox">
                                         </div>
                                     </div>`).join('')}
                                 </div>
